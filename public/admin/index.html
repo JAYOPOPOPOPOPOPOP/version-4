@@ -1,0 +1,2931 @@
+<!DOCTYPE html>
+<html lang="hi" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel</title>
+  <script>document.documentElement.setAttribute('data-theme','dark');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #070b12;
+      --card: #0f1621;
+      --sidebar: #0c1219;
+      --accent: #22d3ee;
+      --accent-bright: #67e8f9;
+      --text: #f0f9ff;
+      --muted: #94a3b8;
+      --border: rgba(34, 211, 238, 0.22);
+      --blue: #3b82f6;
+      --purple: #a78bfa;
+      --orange: #f59e0b;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Outfit', system-ui, sans-serif;
+      background: var(--bg);
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+    .sidebar {
+      width: 240px;
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      padding: 0;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sidebar .brand { flex-shrink: 0; padding: 1.25rem 1.4rem 1rem; }
+    .sidebar nav {
+      flex: 1 1 auto;
+      overflow-y: auto !important;
+      overflow-x: hidden;
+      min-height: 0;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 0.5rem;
+    }
+    .sidebar .bottom { flex-shrink: 0; }
+    .sidebar .brand {
+      padding: 0 1.4rem 1.5rem;
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: var(--accent-bright);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1rem;
+    }
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.75rem 1.4rem;
+      color: #94a3b8;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+    .sidebar nav a:hover, .sidebar nav a.active {
+      color: #ffffff;
+      background: rgba(6,182,212,0.08);
+      border-left-color: var(--accent);
+    }
+    .sidebar .bottom {
+      margin-top: auto;
+      padding: 1rem 1.4rem;
+      border-top: 1px solid var(--border);
+    }
+    .sidebar .bottom a {
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .sidebar .bottom a:hover { color: var(--accent-bright); }
+    .main {
+      margin-left: 240px;
+      flex: 1;
+      padding: 1.8rem 2rem 3rem;
+      min-height: 100vh;
+      overflow-x: hidden;
+      overflow-y: visible;
+    }
+    .page-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.3rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .stat-card .label { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+    .stat-card .value { font-size: 1.8rem; font-weight: 800; margin-top: 0.3rem; }
+    .stat-card .sub { font-size: 0.8rem; color: #94a3b8; margin-top: 0.2rem; }
+    .stat-card.green .value { color: var(--accent-bright); }
+    .stat-card.blue .value { color: #60a5fa; }
+    .stat-card.purple .value { color: var(--purple); }
+    .stat-card.orange .value { color: var(--orange); }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .panel h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 700px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .sidebar { width: 70px; }
+      .sidebar .brand span, .sidebar nav a span, .sidebar .bottom span { display: none; }
+      .main { margin-left: 70px; padding: 1.2rem; }
+    }
+    .form-group { margin-bottom: 0.9rem; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { display: block; font-size: 0.82rem; font-weight: 600; color: #94a3b8; margin-bottom: 0.35rem; }
+    input[type="text"], input[type="url"], input[type="file"] {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+    }
+    input, select, textarea {
+      background: #0b1220;
+      color: #ffffff;
+      border: 1px solid var(--border);
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(34,211,238,0.15); outline: none; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.75rem 1.4rem;
+      background: linear-gradient(135deg, #06b6d4, #0891b2);
+      border: none;
+      border-radius: 10px;
+      color: #06202a;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(6,182,212,0.35); }
+    .btn-danger {
+      background: #dc2626; color: #fff; border: none;
+    }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: #ffffff;
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent-bright); box-shadow: none; }
+    .msg {
+      padding: 0.7rem 1rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .msg.ok { display: block; background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.35); color: #67e8f9; }
+    .msg.err { display: block; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #b91c1c; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 0.7rem 0.5rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    th { color: #94a3b8; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge.admin { background: rgba(6,182,212,0.15); color: var(--accent-bright); }
+    .badge.user { background: rgba(148,163,184,0.15); color: #94a3b8; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .top-list { list-style: none; }
+    .top-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.65rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.95rem;
+    }
+    .top-list li:last-child { border-bottom: none; }
+    .logo-preview {
+      width: 48px; height: 48px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      margin-top: 0.5rem;
+    }
+    #loading {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999;
+      font-size: 1.1rem; color: #94a3b8;
+    }
+  
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .cmd-row { display:flex; gap:0.5rem; align-items:center; }
+    .cmd-row input { flex:1; padding:0.55rem 0.75rem; border-radius:10px; border:1px solid var(--border); background:var(--card); color:#ffffff; font-family:ui-monospace,monospace; font-size:0.85rem; }
+    .cmd-row button { background:rgba(248,113,113,0.15); border:1px solid rgba(248,113,113,0.35); color:#f87171; border-radius:8px; padding:0.4rem 0.65rem; cursor:pointer; font-size:0.8rem; }
+    
+    html[data-theme="light"] {
+      --bg: #f5fffe; --card: #ffffff; --sidebar: #e6fafb; --accent: #0891b2;
+      --accent-bright: #0e7490; --text: #0f172a; --muted: #334155;
+      --border: rgba(8,145,178,0.28);
+    }
+    html, html[data-theme="dark"], html:not([data-theme]) {
+      --bg: #070b12; --card: #0f1621; --sidebar: #0a1018; --accent: #22d3ee;
+      --accent-bright: #67e8f9; --text: #f0f9ff; --muted: #94a3b8;
+      --border: rgba(34,211,238,0.22);
+    }
+    body { font-family: 'Outfit', 'Segoe UI', system-ui, sans-serif !important; -webkit-font-smoothing: antialiased; letter-spacing: 0; background: #070b12 !important; color: #f0f9ff !important; }
+    /* HARD DARK */
+    /* ===== ALL TEXT WHITE / LIGHT (force) ===== */
+    html, body, button, input, select, textarea, .btn, .panel, .sidebar, .main,
+    .list-card, .page-title, table, th, td, label, a, p, span, h1, h2, h3, h4,
+    .info, .meta, small, strong, div, li, code {
+      font-family: 'Outfit', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif !important;
+    }
+    body, .main, .panel, .list-card, .page-title, td, th, label, p, span, div,
+    h1, h2, h3, h4, strong, li, .info, .info strong {
+      color: #ffffff !important;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .sidebar nav a { color: #cbd5e1 !important; }
+    .sidebar nav a.active, .sidebar nav a:hover { color: #ffffff !important; }
+    .sidebar .brand { color: #67e8f9 !important; }
+    .sidebar .bottom a { color: #cbd5e1 !important; }
+    .meta, small, .muted, .list-card .meta, .info .meta {
+      color: #94a3b8 !important;
+    }
+    th { color: #94a3b8 !important; }
+    input, select, textarea, .modal input, .modal select, .modal textarea {
+      font-family: 'Outfit', 'Segoe UI', system-ui, sans-serif !important;
+      color: #ffffff !important;
+      background: #0b1220 !important;
+    }
+    input::placeholder, textarea::placeholder { color: #64748b !important; }
+    .btn {
+      font-family: 'Outfit', 'Segoe UI', system-ui, sans-serif !important;
+      font-weight: 700 !important;
+    }
+    .btn-outline { color: #ffffff !important; border-color: rgba(255,255,255,0.25) !important; }
+    .panel p, .panel label, section p, section label {
+      color: #e2e8f0 !important;
+    }
+    .stat-card, .stat-card * { color: #ffffff !important; }
+    .stat-card .meta, .stat-card small { color: #94a3b8 !important; }
+
+    .sidebar { background: #0a1018 !important; }
+    .main { background: #070b12 !important; }
+    .panel, .list-card, .stat-card, .order-card { background: #0f1621 !important; color: #f0f9ff !important; border-color: rgba(34,211,238,0.22) !important; }
+    .page-title { color: #f0f9ff !important; }
+    .theme-toggle {
+      width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--card); color: #ffffff; cursor: pointer; margin-left: auto;
+      display: inline-flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+
+  
+    /* Floating theme swipe */
+    .theme-fab {
+      position: fixed;
+      right: 1.25rem;
+      bottom: 1.25rem;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      width: 72px;
+      height: 36px;
+      padding: 3px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-card, var(--card, #fff));
+      box-shadow: 0 8px 28px rgba(15, 23, 42, 0.18);
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.25s, border-color 0.25s;
+    }
+    .theme-fab-knob {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--gradient, linear-gradient(135deg, #22d3ee, #0891b2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(8, 145, 178, 0.35);
+      color: #fff;
+    }
+    [data-theme="dark"] .theme-fab-knob {
+      transform: translateX(36px);
+    }
+    .theme-fab-track {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      pointer-events: none;
+      font-size: 0.7rem;
+      opacity: 0.55;
+    }
+
+  
+    /* ===== MODAL SIMPLE SCROLL ===== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 99999;
+      background: rgba(0,0,0,0.7);
+      overflow-y: scroll;
+      overflow-x: hidden;
+      padding: 24px 12px 48px;
+      box-sizing: border-box;
+    }
+    .modal-overlay.show { display: block !important; }
+    .modal {
+      background: #0c161a;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 14px;
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 1.25rem;
+      color: #f0f9ff;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      font-family: 'Outfit', system-ui, sans-serif;
+      /* NO max-height on modal - overlay scrolls instead */
+      max-height: none;
+      overflow: visible;
+    }
+    .modal.modal-sm { max-width: 380px; }
+    .modal h2 {
+      font-size: 1.15rem;
+      margin: 0 0 1rem;
+      color: #67e8f9;
+    }
+    #formModalBody {
+      overflow: visible;
+      padding: 0;
+    }
+    .modal .form-group { margin-bottom: 0.85rem; }
+    .modal .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #94a3b8;
+      margin-bottom: 0.3rem;
+    }
+    .modal .form-group input,
+    .modal .form-group textarea,
+    .modal .form-group select {
+      width: 100%;
+      padding: 0.65rem 0.85rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: #08110f;
+      color: #e2e8f0;
+      font-family: inherit;
+      font-size: 0.95rem;
+      box-sizing: border-box;
+    }
+    .modal .form-group textarea { resize: vertical; min-height: 80px; }
+    .modal-actions {
+      display: flex;
+      gap: 0.6rem;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      margin-top: 1.1rem;
+      padding-top: 0.85rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .modal-actions .btn { width: auto; }
+    #formModalMsg { font-size: 0.88rem; margin-top: 0.5rem; }
+
+    #categoriesList, #productsList, #pagesList {
+      max-height: none;
+      overflow: visible;
+    }
+    .list-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem; }
+    .list-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 1rem; margin-bottom: 0.65rem; display: flex; gap: 0.85rem; align-items: flex-start; flex-wrap: wrap;
+    }
+    .list-card img { width: 48px; height: 48px; object-fit: cover; border-radius: 10px; background: #1e293b; }
+    .list-card .info { flex: 1; min-width: 140px; }
+    .list-card .info strong { display: block; font-size: 1rem; }
+    .list-card .info .meta { font-size: 0.82rem; color: #94a3b8; margin-top: 0.2rem; }
+    .list-card .actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .order-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 1.15rem; margin-bottom: 0.85rem;
+    }
+    .order-card .row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem; }
+    .order-card .detail-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem 1rem;
+      font-size: 0.85rem; color: #94a3b8; margin: 0.65rem 0;
+    }
+    .order-card .detail-grid span { color: #ffffff; font-weight: 600; }
+    @media (max-width: 520px) { .order-card .detail-grid { grid-template-columns: 1fr; } }
+
+  
+
+  </style>
+
+
+<script>
+(function(){
+  var t = localStorage.getItem('mc_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', t);
+  function sync(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var knob = document.getElementById('themeKnob');
+    if (knob) knob.textContent = dark ? '🌙' : '☀️';
+  }
+  function bind(){
+    sync();
+    var b = document.getElementById('themeToggle');
+    if (!b || b._bound) return;
+    b._bound = true;
+    b.addEventListener('click', function(){
+      var n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', n);
+      localStorage.setItem('mc_theme', n);
+      sync();
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+  else bind();
+})();
+</script>
+
+
+<script src="/js/site-brand.js" defer></script>
+</head>
+<body>
+  <div id="loading">Checking auth...</div>
+
+  <aside class="sidebar">
+    <a href="/" class="brand" id="brand-link" style="text-decoration:none;display:block;cursor:pointer;" title="Go to website">
+      ⛏️ <span id="brand-name">NIGHSHADES MC</span> </a>
+    <nav>
+      <a href="#" class="active" data-section="dashboard">📊 <span>Dashboard</span></a>
+      <a href="#" data-section="payments">📦 <span>Orders</span></a>
+      <a href="#" data-section="paysystem">💰 <span>Pay System</span></a>
+      <a href="#" data-section="sales">🎉 <span>Sales & Promo</span></a>
+      <a href="#" data-section="products">🎁 <span>Products</span></a>
+      <a href="#" data-section="categories">🗂️ <span>Categories</span></a>
+      <a href="#" data-section="pages">📄 <span>Pages</span></a>
+      <a href="#" data-section="modules">🧩 <span>Modules</span></a>
+      <a href="#" data-section="connectors">🔌 <span>Connect Server</span></a>
+      <a href="#" data-section="coupons">🏷️ <span>Coupons</span></a>
+      <a href="#" data-section="referral">🔗 <span>Referral Links</span></a>
+      <a href="#" data-section="users">👥 <span>Users</span></a>
+      <a href="#" data-section="tickets">🎫 <span>Tickets</span></a>
+      <a href="#" data-section="settings">⚙️ <span>Site Settings</span></a>
+      <a href="#" data-section="update">🔄 <span>Update</span></a>
+    </nav>
+    <div class="bottom">
+      <a href="/">← <span>Back to Website</span></a><br /><br />
+      <a href="#" id="logout">Logout</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- Dashboard -->
+    <section class="section active" id="section-dashboard">
+      <h1 class="page-title">Dashboard</h1>
+      <div class="stats">
+        <div class="stat-card green">
+          <div class="label">Sales Today</div>
+          <div class="value" id="sales-today">₹0</div>
+          <div class="sub" id="sales-today-count">0 orders</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="label">Sales This Week</div>
+          <div class="value" id="sales-week">₹0</div>
+          <div class="sub" id="sales-week-count">0 orders</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="label">Live Users</div>
+          <div class="value" id="live-users">0</div>
+          <div class="sub">last 15 min</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="label">Total Users</div>
+          <div class="value" id="total-users">0</div>
+          <div class="sub">registered</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+        <div class="panel">
+          <h2>🏆 Top Buys</h2>
+          <ul class="top-list" id="top-buys">
+            <li style="color:#94a3b8">No sales yet</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h2>🛒 Recent Sales</h2>
+          <ul class="top-list" id="recent-sales">
+            <li style="color:#94a3b8">No sales yet</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Settings -->
+
+    <section class="section" id="section-tickets">
+      <h1 class="page-title">Support Tickets</h1>
+      <p style="color:#94a3b8;font-size:0.9rem;margin-bottom:1rem;">All customer tickets. Reply, close, or reopen.</p>
+      <div id="ticketsList"></div>
+    </section>
+
+    <section class="section" id="section-modules"></section>
+
+    <section class="section" id="section-update">
+      <h1 class="page-title">Website Update</h1>
+      <div class="panel">
+        <h2>🔄 Upload a new version</h2>
+        <p style="opacity:.8;margin:0 0 12px;line-height:1.5">Upload the new project <b>.zip</b>. Only the code will be updated. Your <b>data (users, orders, products, settings), uploaded images and login sessions</b> will remain completely safe. An automatic backup is created before every update.</p>
+        <div id="upd-current" style="margin-bottom:12px;font-size:.9rem;opacity:.85"></div>
+        <button type="button" class="btn" id="upd-open">⬆ Upload new version</button>
+        <div class="msg" id="upd-msg-main" style="margin-top:12px"></div>
+      </div>
+      <div class="panel">
+        <h2>🕘 Backups (rollback)</h2>
+        <div id="upd-backups" style="font-size:.9rem"></div>
+        <p style="opacity:.7;font-size:.8rem;margin:10px 0 0">Rollback restores the code only; your data stays as it is. A copy of the database is also saved in <code>data/backups/&lt;id&gt;/db.json</code>.</p>
+      </div>
+      <div class="panel">
+        <h2>📜 Update history</h2>
+        <div id="upd-history" style="font-size:.9rem"></div>
+      </div>
+    </section>
+
+    <section class="section" id="section-settings">
+      <h1 class="page-title">Site Settings</h1>
+      <div class="msg" id="settings-msg"></div>
+
+      <div class="panel">
+        <h2>🌐 Website Info</h2>
+        <form id="settingsForm">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Server Name</label>
+              <input type="text" id="siteName" required />
+            </div>
+            <div class="form-group">
+              <label>Server IP</label>
+              <input type="text" id="serverIP" required />
+            </div>
+            <div class="form-group">
+              <label>Port</label>
+              <input type="text" id="serverPort" required />
+            </div>
+            <div class="form-group">
+              <label>Discord Link (optional)</label>
+              <input type="text" id="discordLink" placeholder="https://discord.gg/..." />
+            </div>
+            <div class="form-group full">
+              <label>Logo (optional)</label>
+              <input type="file" id="logo" accept="image/*" />
+              <img id="logoPreview" class="logo-preview" style="display:none;" />
+            </div>
+          </div>
+
+          <hr style="border:none;border-top:1px solid var(--border);margin:1.4rem 0;" />
+
+          <h2 style="margin-bottom:0.8rem;">🎨 Look &amp; Feel</h2>
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Background type</label>
+              <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:0.35rem;">
+                <label style="font-weight:500;"><input type="radio" name="bgType" value="default" checked /> Preset</label>
+                <label style="font-weight:500;"><input type="radio" name="bgType" value="image" /> Image URL</label>
+                <label style="font-weight:500;"><input type="radio" name="bgType" value="live" /> Live / GIF</label>
+              </div>
+            </div>
+            <div class="form-group full" id="bgDefaultBox">
+              <label>Preset (click one)</label>
+              <div id="bgPresets" style="display:grid;grid-template-columns:repeat(5,1fr);gap:0.45rem;margin-top:0.4rem;"></div>
+            </div>
+            <div class="form-group full" id="bgImageBox" style="display:none;">
+              <label>Image URL</label>
+              <input type="url" id="bgImageUrl" placeholder="https://..." />
+            </div>
+            <div class="form-group full" id="bgLiveBox" style="display:none;">
+              <label>Live / GIF / Video URL</label>
+              <input type="url" id="bgLiveUrl" placeholder="https://..." />
+            </div>
+            <div class="form-group">
+              <label>Accent</label>
+              <input type="color" id="c-accent" value="#06b6d4" style="width:100%;height:38px;border:none;border-radius:8px;" />
+            </div>
+            <div class="form-group">
+              <label>Background</label>
+              <input type="color" id="c-bg" value="#f5fffe" style="width:100%;height:38px;border:none;border-radius:8px;" />
+            </div>
+            <div class="form-group">
+              <label>Text</label>
+              <input type="color" id="c-text" value="#0f172a" style="width:100%;height:38px;border:none;border-radius:8px;" />
+            </div>
+            <div class="form-group">
+              <label>Card</label>
+              <input type="color" id="c-card" value="#ffffff" style="width:100%;height:38px;border:none;border-radius:8px;" />
+            </div>
+            <div class="form-group">
+              <label>Particles</label>
+              <select id="particleType">
+                <option value="0">Dots soft</option>
+                <option value="1">Dots bright</option>
+                <option value="2">Stars</option>
+                <option value="3">Snow</option>
+                <option value="4">Rain</option>
+                <option value="5">Embers</option>
+                <option value="6">Leaves</option>
+                <option value="7">Bubbles</option>
+                <option value="8">Sparks</option>
+                <option value="9">Hearts</option>
+                <option value="10">Diamonds</option>
+                <option value="11">Squares</option>
+                <option value="12">Triangles</option>
+                <option value="13">Crosses</option>
+                <option value="14">Glitch</option>
+                <option value="15">Neon orbs</option>
+                <option value="16">Fireflies</option>
+                <option value="17">Ash</option>
+                <option value="18">Confetti</option>
+                <option value="19">Matrix</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="display:flex;align-items:center;gap:0.5rem;margin-top:1.6rem;cursor:pointer;">
+                <input type="checkbox" id="particlesEnabled" checked /> Particles on
+              </label>
+            </div>
+          </div>
+
+          <hr style="border:none;border-top:1px solid var(--border);margin:1.4rem 0;" />
+
+          <h2 style="margin-bottom:0.6rem;">🔧 Maintenance</h2>
+          <label style="display:flex;align-items:center;gap:0.55rem;cursor:pointer;font-weight:500;">
+            <input type="checkbox" id="maintMode" />
+            Enable maintenance mode <span style="color:#94a3b8;font-weight:400;font-size:0.85rem;">(members only — admins still see site)</span>
+          </label>
+
+          <button type="submit" class="btn" id="btnSaveSettings" style="margin-top:1.3rem;">Save Settings</button>
+          <div id="settingsLoading" style="display:none;align-items:center;gap:0.6rem;color:#94a3b8;font-size:0.9rem;margin-top:0.75rem;">
+            <span style="width:18px;height:18px;border:2px solid rgba(6,182,212,0.3);border-top-color:#06b6d4;border-radius:50%;display:inline-block;animation:spin 0.7s linear infinite;"></span>
+            Saving settings...
+          </div>
+        </form>
+      </div>
+
+      <div class="panel" style="margin-top:1.25rem;">
+        <h2>🔗 Quick Links</h2>
+        <p style="color:#94a3b8;font-size:0.88rem;margin-bottom:0.85rem;">Unlimited custom links for nav / footer. Edit or delete anytime.</p>
+        <div id="quickLinksList"></div>
+        <button type="button" class="btn btn-outline btn-sm" id="btnAddQuickLink" style="margin-top:0.75rem;">+ Add Quick Link</button>
+      </div>
+    </section>
+
+
+    <section class="section" id="section-connectors">
+      <h1 class="page-title">Connect Server</h1>
+      <div class="panel">
+        <p style="color:#94a3b8;font-size:0.9rem;margin-bottom:1rem;">
+          Link Paper servers to this website. Generate a code, put it in the plugin config — status shows Connected automatically.
+        </p>
+        <div style="display:flex;flex-wrap:wrap;gap:0.6rem;margin-bottom:1.2rem;">
+          <button type="button" class="btn" id="btnDownloadPlugin">⬇ Download Plugin</button>
+          <button type="button" class="btn btn-outline" id="btnGenConnector">+ Generate Code</button>
+        </div>
+        <div class="msg" id="connMsg" style="display:none;"></div>
+        <div id="connectorList"></div>
+      </div>
+    </section>
+
+
+    <!-- Store Pages -->
+        <section class="section" id="section-pages">
+      <h1 class="page-title">Pages</h1>
+      <div class="panel">
+        <div class="list-toolbar">
+          <p style="color:#94a3b8;font-size:0.9rem;margin:0;">Pages appear in the top bar. First page = Visit Store.</p>
+          <button type="button" class="btn" id="btnCreatePage">+ Create a Page</button>
+        </div>
+        <div id="pagesList"></div>
+      </div>
+    </section>
+
+    <!-- Categories -->
+        <section class="section" id="section-categories">
+      <h1 class="page-title">Categories</h1>
+      <div class="panel">
+        <div class="list-toolbar">
+          <p style="color:#94a3b8;font-size:0.9rem;margin:0;">Categories show as cards on a page.</p>
+          <button type="button" class="btn" id="btnCreateCategory">+ Create a Category</button>
+        </div>
+        <div id="categoriesList"></div>
+      </div>
+    </section>
+
+    <!-- Products -->
+        <section class="section" id="section-products">
+      <h1 class="page-title">Products</h1>
+      <div class="panel">
+        <div class="list-toolbar">
+          <p style="color:#94a3b8;font-size:0.9rem;margin:0;">Products with price, image and server commands. Use <code style="background:#e0f7fa;padding:0.1rem 0.35rem;border-radius:4px;">%playername%</code> in commands.</p>
+          <button type="button" class="btn" id="btnCreateProduct">+ Create a Product</button>
+        </div>
+        <div id="productsList"></div>
+      </div>
+    </section>
+
+<section class="section" id="section-coupons">
+      <h1 class="page-title">Coupons</h1>
+      <div class="panel">
+        <div style="display:flex;flex-wrap:wrap;gap:0.75rem;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <p style="color:#94a3b8;font-size:0.9rem;margin:0;">Discount codes for checkout. Apply to all products or selected ones only.</p>
+          <button type="button" class="btn" id="btnOpenCoupon">+ Create coupon</button>
+        </div>
+        <div id="couponsList"></div>
+      </div>
+    </section>
+
+    <section class="section" id="section-referral">
+      <h1 class="page-title">Referral Links</h1>
+      <div class="panel">
+        <div style="display:flex;flex-wrap:wrap;gap:0.75rem;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <p style="color:#94a3b8;font-size:0.9rem;margin:0;">Create a referral link, share its code with buyers, and they apply it at checkout.</p>
+          <button type="button" class="btn" id="btnOpenRef">+ Create a referral link</button>
+        </div>
+        <div id="referralLinksList"></div>
+      </div>
+    </section>
+
+
+    <!-- Pay System -->
+    
+    <!-- Sales & Promo -->
+    <section class="section" id="section-sales">
+      <h1 class="page-title">Sales & Promo</h1>
+      <p style="color:#94a3b8;font-size:0.9rem;margin-bottom:1.25rem;">Site-wide sale, new user offer, and announcements. Click Edit to configure each in a popup.</p>
+      <div id="salesCards">
+        <div class="list-card" style="align-items:center;">
+          <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#06b6d4,#0891b2);display:flex;align-items:center;justify-content:center;font-size:1.4rem;">🛍️</div>
+          <div class="info">
+            <strong>Site Sale</strong>
+            <div class="meta" id="saleCardMeta">Loading...</div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn btn-outline btn-sm" id="btnEditSale">Edit</button>
+          </div>
+        </div>
+        <div class="list-card" style="align-items:center;">
+          <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#a78bfa,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:1.4rem;">🎁</div>
+          <div class="info">
+            <strong>New User Discount</strong>
+            <div class="meta" id="newUserCardMeta">Loading...</div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn btn-outline btn-sm" id="btnEditNewUser">Edit</button>
+          </div>
+        </div>
+        <div class="list-card" style="align-items:center;">
+          <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;font-size:1.4rem;">📢</div>
+          <div class="info">
+            <strong>Announcement</strong>
+            <div class="meta" id="announceCardMeta">Loading...</div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn btn-outline btn-sm" id="btnEditAnnounce">Edit</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+<section class="section" id="section-paysystem">
+      <h1 class="page-title">Pay System</h1>
+      <div class="panel">
+        <p style="color:#94a3b8;font-size:0.9rem;margin-bottom:1.25rem;">
+          Choose how customers pay. <strong>Manual</strong> = UPI + screenshot proof. <strong>Gateway</strong> = automatic online payment.
+        </p>
+
+        <div class="form-group">
+          <label>Payment Mode</label>
+          <select id="payMode">
+            <option value="manual">Manual (UPI)</option>
+            <option value="gateway">Payment Gateway</option>
+          </select>
+        </div>
+
+        <div id="manualPayBox" style="margin-top:1rem;padding:1rem;border:1px solid var(--border);border-radius:12px;">
+          <h3 style="margin-bottom:0.75rem;font-size:1rem;">Manual UPI</h3>
+          <div class="form-group">
+            <label>UPI ID</label>
+            <input type="text" id="upiId" placeholder="yourname@upi" />
+          </div>
+          <div class="form-group">
+            <label>UPI QR Image</label>
+            <input type="file" id="upiQrFile" accept="image/*" />
+            <div id="upiQrPreview" style="margin-top:0.5rem;"></div>
+          </div>
+        </div>
+
+        <div id="gatewayPayBox" style="margin-top:1rem;padding:1rem;border:1px solid var(--border);border-radius:12px;display:none;">
+          <h3 style="margin-bottom:0.75rem;font-size:1rem;">Payment Gateway</h3>
+          <div class="form-group">
+            <label>Select Gateway</label>
+            <select id="gatewayProvider">
+              <optgroup label="India">
+                <option value="razorpay">Razorpay (recommended)</option>
+                <option value="payu">PayU</option>
+                <option value="cashfree">Cashfree</option>
+                <option value="phonepe">PhonePe</option>
+                <option value="paytm">Paytm</option>
+              </optgroup>
+              <optgroup label="International">
+                <option value="stripe">Stripe</option>
+                <option value="paypal">PayPal</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div class="gw-fields" data-gw="razorpay">
+            <div class="form-group"><label>Razorpay Key ID</label><input type="text" id="gw_razorpay_key_id" placeholder="rzp_live_..." /></div>
+            <div class="form-group"><label>Razorpay Key Secret</label><input type="password" id="gw_razorpay_key_secret" placeholder="••••••••" /></div>
+            <p style="font-size:0.8rem;color:#94a3b8;">Get keys from <a href="https://dashboard.razorpay.com/app/keys" target="_blank" style="color:var(--accent);">Razorpay Dashboard</a>. Auto-checkout works after keys are saved.</p>
+          </div>
+          <div class="gw-fields" data-gw="stripe" style="display:none;">
+            <div class="form-group"><label>Stripe Publishable Key</label><input type="text" id="gw_stripe_publishable" placeholder="pk_live_..." /></div>
+            <div class="form-group"><label>Stripe Secret Key</label><input type="password" id="gw_stripe_secret" placeholder="sk_live_..." /></div>
+            <p style="font-size:0.8rem;color:#94a3b8;">From <a href="https://dashboard.stripe.com/apikeys" target="_blank" style="color:var(--accent);">Stripe Dashboard</a>. International cards supported.</p>
+          </div>
+          <div class="gw-fields" data-gw="paypal" style="display:none;">
+            <div class="form-group"><label>PayPal Client ID</label><input type="text" id="gw_paypal_client_id" /></div>
+            <div class="form-group"><label>PayPal Secret</label><input type="password" id="gw_paypal_secret" /></div>
+          </div>
+          <div class="gw-fields" data-gw="payu" style="display:none;">
+            <div class="form-group"><label>PayU Merchant Key</label><input type="text" id="gw_payu_merchant_key" /></div>
+            <div class="form-group"><label>PayU Salt</label><input type="password" id="gw_payu_salt" /></div>
+          </div>
+          <div class="gw-fields" data-gw="cashfree" style="display:none;">
+            <div class="form-group"><label>Cashfree App ID</label><input type="text" id="gw_cashfree_app_id" /></div>
+            <div class="form-group"><label>Cashfree Secret</label><input type="password" id="gw_cashfree_secret" /></div>
+          </div>
+          <div class="gw-fields" data-gw="phonepe" style="display:none;">
+            <div class="form-group"><label>PhonePe Merchant ID</label><input type="text" id="gw_phonepe_merchant_id" /></div>
+            <div class="form-group"><label>PhonePe Salt Key</label><input type="password" id="gw_phonepe_salt" /></div>
+          </div>
+          <div class="gw-fields" data-gw="paytm" style="display:none;">
+            <div class="form-group"><label>Paytm MID</label><input type="text" id="gw_paytm_mid" /></div>
+            <div class="form-group"><label>Paytm Merchant Key</label><input type="password" id="gw_paytm_key" /></div>
+          </div>
+        </div>
+
+        <button type="button" class="btn" id="btnSavePaySystem" style="margin-top:1.25rem;">Save Pay System</button>
+        <div id="paySystemMsg" style="margin-top:0.75rem;font-size:0.9rem;"></div>
+      </div>
+    </section>
+
+    <!-- Payments -->
+    <section class="section" id="section-payments">
+      <h1 class="page-title">Orders</h1>
+      <div class="panel">
+        <p style="color:#94a3b8;font-size:0.9rem;margin-bottom:1rem;">
+          All customer orders. See place time, approve time, items, and payment details.
+        </p>
+        <div style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;">
+          <button type="button" class="btn btn-sm" data-pay-filter="all" id="pfAll">All</button>
+          <button type="button" class="btn btn-outline btn-sm" data-pay-filter="pending" id="pfPending">Pending</button>
+          <button type="button" class="btn btn-outline btn-sm" data-pay-filter="approved" id="pfApproved">Approved</button>
+          <button type="button" class="btn btn-outline btn-sm" data-pay-filter="rejected" id="pfRejected">Rejected</button>
+        </div>
+        <div id="paymentsList"></div>
+      </div>
+    </section>
+
+    <!-- Users -->
+    <section class="section" id="section-users">
+      <h1 class="page-title">Users</h1>
+      <div class="panel">
+        <div style="margin-bottom:1rem;">
+          <input type="text" id="userSearch" placeholder="Search users..." style="max-width:280px;padding:0.55rem 0.85rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:#ffffff;" />
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>MC Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Joined</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="users-table"></tbody>
+        </table>
+      </div>
+    </section>
+  
+
+  </main>
+
+  <script>
+
+    // ---- Modal helpers ----
+    function openModal(title, bodyHtml) {
+      var titleEl = document.getElementById('formModalTitle');
+      var bodyEl = document.getElementById('formModalBody');
+      var msgEl = document.getElementById('formModalMsg');
+      var overlay = document.getElementById('formModal');
+      if (titleEl) titleEl.textContent = title;
+      if (bodyEl) bodyEl.innerHTML = bodyHtml;
+      if (msgEl) msgEl.textContent = '';
+      if (overlay) {
+        if (overlay.parentNode !== document.body) document.body.appendChild(overlay);
+        overlay.classList.add('show');
+        overlay.scrollTop = 0;
+      }
+      var saveBtn = document.getElementById('formModalSave');
+      if (saveBtn) saveBtn.style.display = '';
+    }
+    function closeModal() {
+      var overlay = document.getElementById('formModal');
+      if (overlay) overlay.classList.remove('show');
+      var saveBtn = document.getElementById('formModalSave');
+      if (saveBtn) saveBtn.style.display = '';
+    }
+    window.__closeFormModal = function(e) {
+      if (e) e.preventDefault();
+      closeModal();
+    };
+
+    let _confirmResolve = null;
+    function confirmDelete(message) {
+      return new Promise((resolve) => {
+        _confirmResolve = resolve;
+        const txt = document.getElementById('confirmText');
+        const overlay = document.getElementById('confirmModal');
+        if (txt) txt.textContent = message || 'Are you sure you want to delete this?';
+        if (overlay) overlay.classList.add('show');
+        else {
+          // fallback if modal missing
+          resolve(window.confirm(message || 'Delete?'));
+          _confirmResolve = null;
+        }
+      });
+    }
+    function _closeConfirm(result) {
+      const overlay = document.getElementById('confirmModal');
+      if (overlay) overlay.classList.remove('show');
+      if (_confirmResolve) {
+        _confirmResolve(result);
+        _confirmResolve = null;
+      }
+    }
+    window.__closeConfirm = _closeConfirm;
+
+    // Capture-phase so it fires even if something stops bubble
+    document.addEventListener('click', function(e) {
+      const t = e.target;
+      if (!t || !t.closest) return;
+      if (t.id === 'formModalCancel' || t.closest('#formModalCancel')) {
+        e.preventDefault();
+        closeModal();
+        return;
+      }
+      if (t.id === 'formModal') {
+        closeModal();
+        return;
+      }
+      if (t.id === 'confirmYes' || t.closest('#confirmYes')) {
+        e.preventDefault();
+        _closeConfirm(true);
+        return;
+      }
+      if (t.id === 'confirmNo' || t.closest('#confirmNo')) {
+        e.preventDefault();
+        _closeConfirm(false);
+        return;
+      }
+      if (t.id === 'confirmModal') {
+        _closeConfirm(false);
+        return;
+      }
+    }, true);
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeModal();
+        _closeConfirm(false);
+      }
+    });
+
+    // Also wire buttons when DOM is ready (extra safety)
+    function wireModalButtons() {
+      const cancel = document.getElementById('formModalCancel');
+      if (cancel) cancel.onclick = function(e) { e.preventDefault(); closeModal(); };
+      const yes = document.getElementById('confirmYes');
+      if (yes) yes.onclick = function(e) { e.preventDefault(); _closeConfirm(true); };
+      const no = document.getElementById('confirmNo');
+      if (no) no.onclick = function(e) { e.preventDefault(); _closeConfirm(false); };
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', wireModalButtons);
+    } else {
+      // modals may still be below this script — run after a tick
+      setTimeout(wireModalButtons, 0);
+      window.addEventListener('load', wireModalButtons);
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      try {
+        const d = new Date(iso);
+        return d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+      } catch { return iso; }
+    }
+
+
+    // Auth check
+    async function init() {
+      try {
+        const res = await fetch('/api/me', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success || data.user.role !== 'admin') {
+          location.href = '/login.html';
+          return;
+        }
+        document.getElementById('loading').style.display = 'none';
+        // Site name on brand (click goes home)
+        fetch('/api/settings').then(r => r.json()).then(s => {
+          if (s.success) {
+            document.getElementById('brand-name').textContent = s.settings.siteName;
+            const url = s.settings.favicon || s.settings.logo;
+            if (url) {
+              let link = document.querySelector("link[rel='icon']") || document.createElement('link');
+              link.rel = 'icon';
+              link.href = url;
+              document.head.appendChild(link);
+            }
+          }
+        }).catch(() => {});
+        loadDashboard();
+        loadSettings();
+        if (typeof loadQuickLinks === 'function') loadQuickLinks();
+        loadUsers();
+        loadConnectors();
+        loadPages();
+        loadCategories();
+        loadProducts();
+        loadPayments();
+      } catch {
+        location.href = '/login.html';
+      }
+    }
+    init();
+
+    // Sidebar navigation
+    document.querySelectorAll('.sidebar nav a').forEach(a => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.sidebar nav a').forEach(x => x.classList.remove('active'));
+        a.classList.add('active');
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById('section-' + a.dataset.section).classList.add('active');
+        if (a.dataset.section === 'settings' && typeof loadQuickLinks === 'function') loadQuickLinks();
+        if (a.dataset.section === 'tickets' && typeof loadTickets === 'function') loadTickets();
+      });
+    });
+
+    document.getElementById('logout').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+      location.href = '/';
+    });
+
+    async function loadDashboard() {
+      const res = await fetch('/api/admin/dashboard', { credentials: 'include' });
+      const data = await res.json();
+      if (!data.success) return;
+      const d = data.dashboard;
+      document.getElementById('sales-today').textContent = '₹' + d.salesToday;
+      document.getElementById('sales-today-count').textContent = d.salesTodayCount + ' orders';
+      document.getElementById('sales-week').textContent = '₹' + d.salesWeek;
+      document.getElementById('sales-week-count').textContent = d.salesWeekCount + ' orders';
+      document.getElementById('live-users').textContent = d.liveUsers;
+      document.getElementById('total-users').textContent = d.totalUsers;
+
+      const topEl = document.getElementById('top-buys');
+      if (d.topBuys.length === 0) {
+        topEl.innerHTML = '<li style="color:#94a3b8">No sales yet</li>';
+      } else {
+        topEl.innerHTML = d.topBuys.map(t =>
+          `<li><span>${t.name}</span><strong>${t.count}x</strong></li>`
+        ).join('');
+      }
+
+      const recentEl = document.getElementById('recent-sales');
+      if (d.recentSales.length === 0) {
+        recentEl.innerHTML = '<li style="color:#94a3b8">No sales yet</li>';
+      } else {
+        recentEl.innerHTML = d.recentSales.map(s =>
+          `<li><span>${s.product}</span><strong>₹${s.amount}</strong></li>`
+        ).join('');
+      }
+    }
+
+    const PRESET_COLORS = [
+      'linear-gradient(135deg,#0a1628,#0d2818)',
+      'linear-gradient(135deg,#1a0a2e,#0f172a)',
+      'linear-gradient(135deg,#0c1222,#1e3a5f)',
+      'linear-gradient(160deg,#0f0f0f,#1a3a2a)',
+      'linear-gradient(135deg,#1c0a0a,#2d1b0e)',
+      'linear-gradient(135deg,#0a1a1a,#0e3d3d)',
+      'linear-gradient(135deg,#150a20,#2a1040)',
+      'linear-gradient(135deg,#0a0f1a,#1a2744)',
+      'linear-gradient(135deg,#101820,#1c3a3a)',
+      'linear-gradient(135deg,#0d1117,#161b22)'
+    ];
+
+    function initBgPresets() {
+      const box = document.getElementById('bgPresets');
+      if (!box || box.dataset.ready) return;
+      box.dataset.ready = '1';
+      PRESET_COLORS.forEach((g, i) => {
+        const d = document.createElement('div');
+        d.dataset.i = i;
+        d.style.cssText = 'height:48px;border-radius:8px;cursor:pointer;border:2px solid transparent;background:' + g;
+        d.onclick = () => {
+          box.querySelectorAll('div').forEach(x => x.style.borderColor = 'transparent');
+          d.style.borderColor = '#06b6d4';
+          box.dataset.selected = String(i);
+        };
+        box.appendChild(d);
+      });
+    }
+
+    function syncBgTypeUI() {
+      const v = document.querySelector('input[name="bgType"]:checked')?.value || 'default';
+      document.getElementById('bgDefaultBox').style.display = v === 'default' ? 'block' : 'none';
+      document.getElementById('bgImageBox').style.display = v === 'image' ? 'block' : 'none';
+      document.getElementById('bgLiveBox').style.display = v === 'live' ? 'block' : 'none';
+    }
+
+    async function loadSettings() {
+      initBgPresets();
+      const res = await fetch('/api/settings');
+      const data = await res.json();
+      if (!data.success) return;
+      const s = data.settings;
+      document.getElementById('siteName').value = s.siteName || '';
+      document.getElementById('serverIP').value = s.serverIP || '';
+      document.getElementById('serverPort').value = s.serverPort || '';
+      document.getElementById('discordLink').value = s.discordLink || '';
+      if (document.getElementById('upiId')) document.getElementById('upiId').value = s.upiId || '';
+      if (s.upiQr && document.getElementById('upiQrPreview')) {
+        document.getElementById('upiQrPreview').src = s.upiQr;
+        document.getElementById('upiQrPreview').style.display = 'block';
+      }
+      if (s.logo) {
+        const img = document.getElementById('logoPreview');
+        img.src = s.logo;
+        img.style.display = 'block';
+      }
+      const bt = s.bgType || 'default';
+      const radio = document.querySelector('input[name="bgType"][value="' + bt + '"]');
+      if (radio) radio.checked = true;
+      syncBgTypeUI();
+      const box = document.getElementById('bgPresets');
+      const idx = parseInt(s.bgDefault, 10) || 0;
+      if (box) {
+        box.dataset.selected = String(idx);
+        box.querySelectorAll('div').forEach((d, i) => {
+          d.style.borderColor = i === idx ? '#06b6d4' : 'transparent';
+        });
+      }
+      document.getElementById('bgImageUrl').value = s.bgImageUrl || '';
+      document.getElementById('bgLiveUrl').value = s.bgLiveUrl || '';
+      document.getElementById('particlesEnabled').checked = s.particlesEnabled !== false;
+      document.getElementById('particleType').value = String(s.particleType || 0);
+      document.getElementById('maintMode').checked = !!s.maintenanceMode;
+      const c = s.colors || {};
+      if (c.bg) document.getElementById('c-bg').value = c.bg;
+      if (c.card) document.getElementById('c-card').value = c.card;
+      if (c.accent) document.getElementById('c-accent').value = c.accent;
+      if (c.text) document.getElementById('c-text').value = c.text;
+    }
+
+    document.querySelectorAll('input[name="bgType"]').forEach(r => {
+      r.addEventListener('change', syncBgTypeUI);
+    });
+
+    document.getElementById('logo').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const img = document.getElementById('logoPreview');
+        img.src = URL.createObjectURL(file);
+        img.style.display = 'block';
+      }
+    });
+
+    document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('settings-msg');
+      const loading = document.getElementById('settingsLoading');
+      const btn = document.getElementById('btnSaveSettings');
+      const formData = new FormData();
+      formData.append('siteName', document.getElementById('siteName').value.trim());
+      formData.append('serverIP', document.getElementById('serverIP').value.trim());
+      formData.append('serverPort', document.getElementById('serverPort').value.trim());
+      formData.append('discordLink', document.getElementById('discordLink').value.trim());
+      formData.append('upiId', (document.getElementById('upiId')?.value || '').trim());
+      const upiQrFile = document.getElementById('upiQr');
+      if (upiQrFile && upiQrFile.files && upiQrFile.files[0]) formData.append('upiQr', upiQrFile.files[0]);
+      const logoEl = document.getElementById('logo');
+      if (logoEl && logoEl.files && logoEl.files[0]) formData.append('logo', logoEl.files[0]);
+      formData.append('bgType', document.querySelector('input[name="bgType"]:checked')?.value || 'default');
+      formData.append('bgDefault', document.getElementById('bgPresets')?.dataset.selected || '0');
+      formData.append('bgImageUrl', (document.getElementById('bgImageUrl')?.value || '').trim());
+      formData.append('bgLiveUrl', (document.getElementById('bgLiveUrl')?.value || '').trim());
+      formData.append('particlesEnabled', document.getElementById('particlesEnabled')?.checked ? 'true' : 'false');
+      formData.append('particleType', document.getElementById('particleType')?.value || '0');
+      formData.append('maintenanceMode', document.getElementById('maintMode')?.checked ? 'true' : 'false');
+      formData.append('colors', JSON.stringify({
+        bg: document.getElementById('c-bg')?.value || '#070b12',
+        card: document.getElementById('c-card')?.value || '#0f1621',
+        accent: document.getElementById('c-accent')?.value || '#06b6d4',
+        accentBright: document.getElementById('c-accent')?.value || '#22d3ee',
+        text: document.getElementById('c-text')?.value || '#f0fdf4',
+        muted: '#94a3b8'
+      }));
+
+      if (loading) loading.style.display = 'flex';
+      if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+      if (msg) { msg.className = 'msg'; msg.textContent = ''; msg.style.display = 'none'; }
+
+      try {
+        const res = await fetch('/api/admin/settings', {
+          method: 'PUT',
+          credentials: 'include',
+          body: formData
+        });
+        const data = await res.json();
+        if (msg) msg.style.display = 'block';
+        if (data.success) {
+          if (msg) { msg.className = 'msg ok'; msg.textContent = 'Settings saved! UPI & site updated.'; }
+          if (data.settings?.siteName) {
+            const brand = document.getElementById('brand-name');
+            if (brand) brand.textContent = data.settings.siteName;
+          }
+          if (data.settings?.logo) {
+            const prev = document.getElementById('logoPreview');
+            if (prev) { prev.src = data.settings.logo; prev.style.display = 'block'; }
+          }
+          if (data.settings?.upiQr) {
+            const uq = document.getElementById('upiQrPreview');
+            if (uq) { uq.src = data.settings.upiQr; uq.style.display = 'block'; }
+          }
+          if (data.settings?.upiId && document.getElementById('upiId')) {
+            document.getElementById('upiId').value = data.settings.upiId;
+          }
+        } else {
+          if (msg) { msg.className = 'msg err'; msg.textContent = data.message || 'Failed to save'; }
+        }
+      } catch (err) {
+        if (msg) { msg.style.display = 'block'; msg.className = 'msg err'; msg.textContent = 'Failed to save settings'; }
+      }
+      if (loading) loading.style.display = 'none';
+      if (btn) { btn.disabled = false; btn.textContent = 'Save Settings'; }
+    });
+
+    async function loadUsers() {
+      try {
+        const res = await fetch('/api/admin/users', { credentials: 'include' });
+        const d = await res.json();
+        if (!d.success) return;
+        window.__allUsers = d.users || [];
+        renderUsers(window.__allUsers);
+        const search = document.getElementById('userSearch');
+        if (search && !search._bound) {
+          search._bound = true;
+          search.addEventListener('input', () => {
+            const q = search.value.toLowerCase().trim();
+            const filtered = (window.__allUsers || []).filter(u =>
+              (u.mcUsername || '').toLowerCase().includes(q) ||
+              (u.email || '').toLowerCase().includes(q)
+            );
+            renderUsers(filtered);
+          });
+        }
+      } catch {}
+    }
+    function renderUsers(users) {
+      const tbody = document.getElementById('users-table');
+      if (!tbody) return;
+      if (!users || !users.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="color:#94a3b8;">No users</td></tr>';
+        return;
+      }
+      tbody.innerHTML = users.map(u => {
+        const roleId = u.role === 'admin' ? 'admin' : 'user';
+        const roleBadge = roleId === 'admin' ? 'badge-admin' : 'badge-off';
+        const status = u.banned ? '<span class="badge badge-rejected">Banned</span>' : '<span class="badge badge-on">Active</span>';
+        const roleOpts = [{id:'admin',name:'Admin'},{id:'user',name:'User'}]
+          .map(r => '<option value="'+r.id+'"'+(roleId===r.id?' selected':'')+'>'+r.name+'</option>').join('');
+        const actions = [];
+        actions.push('<select data-set-role="'+u.id+'" style="font-size:0.78rem;padding:0.25rem;border-radius:6px;">'+roleOpts+'</select>');
+        actions.push('<button type="button" class="btn btn-outline btn-sm" data-set-balance="'+u.id+'" data-bal="'+(u.balance||0)+'">₹'+(Number(u.balance||0).toFixed(0))+' credit</button>');
+        if (u.banned) {
+          actions.push('<button type="button" class="btn btn-outline btn-sm" data-unban="' + u.id + '">Unban</button>');
+        } else {
+          actions.push('<button type="button" class="btn btn-outline btn-sm" data-ban="' + u.id + '">Ban</button>');
+        }
+        actions.push('<button type="button" class="btn btn-danger btn-sm" data-del-user="' + u.id + '">Delete</button>');
+        return '<tr><td>' + escapeHtml(u.mcUsername) + '</td><td>' + escapeHtml(u.email) + '</td><td><span class="badge ' + roleBadge + '">' + escapeHtml(roleId) + '</span></td><td>' + status + '</td><td>' + (u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—') + '</td><td style="display:flex;gap:0.35rem;flex-wrap:wrap;align-items:center;">' + actions.join('') + '</td></tr>';
+      }).join('');
+      tbody.querySelectorAll('[data-set-role]').forEach(sel => {
+        sel.onchange = async () => {
+          await fetch('/api/admin/users/' + sel.dataset.setRole, { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role: sel.value }) });
+          loadUsers();
+        };
+      });
+      tbody.querySelectorAll('[data-set-balance]').forEach(btn => {
+        btn.onclick = async () => {
+          const cur = btn.dataset.bal || '0';
+          const v = prompt('Set balance (₹) for user. Current: ' + cur, cur);
+          if (v === null) return;
+          const n = parseFloat(v);
+          if (isNaN(n) || n < 0) return alert('Invalid');
+          await fetch('/api/admin/users/' + btn.dataset.setBalance, { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ balance: n }) });
+          loadUsers();
+        };
+      });
+      tbody.querySelectorAll('[data-make-admin]').forEach(btn => {
+        btn.onclick = async () => {
+          await fetch('/api/admin/users/' + btn.dataset.makeAdmin, { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role: 'admin' }) });
+          loadUsers();
+        };
+      });
+      tbody.querySelectorAll('[data-make-user]').forEach(btn => {
+        btn.onclick = async () => {
+          if (!confirm('Demote this admin to user?')) return;
+          await fetch('/api/admin/users/' + btn.dataset.makeUser, { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role: 'user' }) });
+          loadUsers();
+        };
+      });
+      tbody.querySelectorAll('[data-ban]').forEach(btn => {
+        btn.onclick = async () => {
+          if (!confirm('Ban this user?')) return;
+          await fetch('/api/admin/users/' + btn.dataset.ban, { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ banned: true }) });
+          loadUsers();
+        };
+      });
+      tbody.querySelectorAll('[data-unban]').forEach(btn => {
+        btn.onclick = async () => {
+          await fetch('/api/admin/users/' + btn.dataset.unban, { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ banned: false }) });
+          loadUsers();
+        };
+      });
+      tbody.querySelectorAll('[data-del-user]').forEach(btn => {
+        btn.onclick = async () => {
+          if (!confirm('Permanently delete this user?')) return;
+          await fetch('/api/admin/users/' + btn.dataset.delUser, { method: 'DELETE', credentials: 'include' });
+          loadUsers();
+        };
+      });
+    }
+  
+
+    async function loadConnectors() {
+      const box = document.getElementById('connectorList');
+      if (!box) return;
+      try {
+        const res = await fetch('/api/admin/connectors', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) return;
+        if (!data.connectors.length) {
+          box.innerHTML = '<p style="color:#94a3b8;">No servers yet. Click Generate Code.</p>';
+          return;
+        }
+        box.innerHTML = data.connectors.map(c => {
+          const status = c.connected
+            ? '<span style="color:#22d3ee;font-weight:700;">● Connected</span>'
+            : '<span style="color:#f87171;font-weight:700;">○ Not connected</span>';
+          const last = c.lastSeen ? new Date(c.lastSeen).toLocaleString() : 'Never';
+          return `<div style="border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:0.75rem;display:flex;flex-wrap:wrap;gap:0.8rem;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-weight:700;font-size:1.05rem;">${escapeHtml(c.name)}</div>
+              <div style="margin-top:0.35rem;font-family:monospace;letter-spacing:0.04em;user-select:all;background:var(--card);padding:0.35rem 0.6rem;border-radius:8px;display:inline-block;">${escapeHtml(c.code)}</div>
+              <div style="margin-top:0.4rem;font-size:0.8rem;color:#94a3b8;">Last seen: ${last}${c.serverVersion ? ' · ' + escapeHtml(c.serverVersion) : ''}${c.connected ? ' · ' + c.playersOnline + ' players' : ''}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem;">
+              ${status}
+              <div style="display:flex;gap:0.4rem;">
+                <button type="button" class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;" data-refresh="${c.id}">↻ Refresh</button>
+                <button type="button" class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;" data-del="${c.id}">Delete</button>
+              </div>
+            </div>
+          </div>`;
+        }).join('');
+        box.querySelectorAll('[data-del]').forEach(btn => {
+          btn.onclick = async () => {
+            if (!confirm('Delete this server connector?')) return;
+            await fetch('/api/admin/connectors/' + btn.dataset.del, { method: 'DELETE', credentials: 'include' });
+            loadConnectors();
+        loadPages();
+          };
+        });
+        box.querySelectorAll('[data-refresh]').forEach(btn => {
+          btn.onclick = () => loadConnectors();
+        loadPages();
+        });
+      } catch (e) {
+        box.innerHTML = '<p style="color:#f87171;">Failed to load</p>';
+      }
+    }
+    function escapeHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    document.getElementById('btnGenConnector')?.addEventListener('click', async () => {
+      const name = prompt('Server name (e.g. LIFESTEAL)');
+      if (!name || !name.trim()) return;
+      const msg = document.getElementById('connMsg');
+      try {
+        const res = await fetch('/api/admin/connectors', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ name: name.trim() })
+        });
+        const data = await res.json();
+        msg.style.display = 'block';
+        if (data.success) {
+          msg.className = 'msg ok';
+          msg.textContent = 'Code generated for ' + data.connector.name + ': ' + data.connector.code;
+          loadConnectors();
+        loadPages();
+        } else {
+          msg.className = 'msg err';
+          msg.textContent = data.message || 'Failed';
+        }
+      } catch {
+        msg.style.display = 'block';
+        msg.className = 'msg err';
+        msg.textContent = 'Failed';
+      }
+    });
+
+    async function loadPages() {
+      const box = document.getElementById('pagesList');
+      if (!box) return;
+      try {
+        const res = await fetch('/api/admin/pages', { credentials: 'include' });
+        const d = await res.json();
+        if (!d.success) { box.innerHTML = '<p style="color:#94a3b8;">Failed to load</p>'; return; }
+        const pages = d.pages || [];
+        if (!pages.length) {
+          box.innerHTML = '<div class="empty"><p>No pages yet. Click "+ Create a Page".</p></div>';
+          return;
+        }
+        box.innerHTML = pages.map(p => `
+          <div class="list-card">
+            <div class="info">
+              <strong>${escapeHtml(p.title || 'Untitled')}</strong>
+              <div class="meta">Slug: /${escapeHtml(p.slug || '')} · ${fmtDate(p.createdAt)}</div>
+            </div>
+            <div class="actions">
+              <button type="button" class="btn btn-outline btn-sm" data-edit-page="${p.id}">Edit</button>
+              <button type="button" class="btn btn-danger btn-sm" data-del-page="${p.id}">Delete</button>
+            </div>
+          </div>`).join('');
+        box.querySelectorAll('[data-edit-page]').forEach(btn => {
+          btn.onclick = () => {
+            const p = pages.find(x => x.id === btn.dataset.editPage);
+            if (!p) return;
+            openPageModal(p);
+          };
+        });
+        box.querySelectorAll('[data-del-page]').forEach(btn => {
+          btn.onclick = async () => {
+            if (!(await confirmDelete('Delete this page permanently?'))) return;
+            await fetch('/api/admin/pages/' + btn.dataset.delPage, { method: 'DELETE', credentials: 'include' });
+            loadPages();
+          };
+        });
+      } catch {
+        box.innerHTML = '<p style="color:#dc2626;">Failed to load pages</p>';
+      }
+    }
+
+    function openPageModal(page) {
+      const isEdit = !!page;
+      openModal(isEdit ? 'Edit Page' : 'Create a Page', `
+        <div class="form-group"><label>Title</label>
+          <input type="text" id="mPageTitle" value="${escapeHtml(page?.title || '')}" placeholder="e.g. Ranks Store" /></div>
+        <div class="form-group"><label>Content</label>
+          <textarea id="mPageContent" rows="5" placeholder="Page description">${escapeHtml(page?.content || '')}</textarea></div>
+      `);
+      document.getElementById('formModalSave').onclick = async () => {
+        const title = (document.getElementById('mPageTitle').value || '').trim();
+        const content = (document.getElementById('mPageContent').value || '').trim();
+        const msg = document.getElementById('formModalMsg');
+        if (!title) { msg.style.color = '#dc2626'; msg.textContent = 'Title required'; return; }
+        setSaving(true);
+        try {
+          let res;
+          if (isEdit) {
+            res = await fetch('/api/admin/pages/' + page.id, {
+              method: 'PUT', credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ title, content })
+            });
+          } else {
+            res = await fetch('/api/admin/pages', {
+              method: 'POST', credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ title, content })
+            });
+          }
+          const d = await res.json();
+          setSaving(false);
+          if (d.success) { closeModal(); loadPages(); }
+          else { msg.style.color = '#dc2626'; msg.textContent = d.message || 'Failed'; }
+        } catch { setSaving(false); msg.style.color = '#dc2626'; msg.textContent = 'Network error'; }
+      };
+    }
+
+    document.getElementById('btnCreatePage')?.addEventListener('click', () => openPageModal(null));
+
+    async function loadCategories() {
+      const box = document.getElementById('categoriesList');
+      if (!box) return;
+      try {
+        const res = await fetch('/api/admin/categories', { credentials: 'include' });
+        const d = await res.json();
+        if (!d.success) return;
+        const cats = d.categories || [];
+        window.__cats = cats;
+        if (!cats.length) {
+          box.innerHTML = '<div class="empty"><p>No categories yet. Click "+ Create a Category".</p></div>';
+          return;
+        }
+        box.innerHTML = cats.map(cat => `
+          <div class="list-card">
+            ${(cat.logo || cat.image) ? `<img src="${escapeHtml(cat.logo || cat.image)}" alt="" />` : '<div style="width:48px;height:48px;border-radius:10px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;">📁</div>'}
+            <div class="info">
+              <strong>${escapeHtml(cat.name || '')}</strong>
+              <div class="meta">${escapeHtml((cat.description || '').slice(0,80))}${cat.pageId ? ' · Page linked' : ''}</div>
+            </div>
+            <div class="actions">
+              <button type="button" class="btn btn-outline btn-sm" data-edit-cat="${cat.id}">Edit</button>
+              <button type="button" class="btn btn-danger btn-sm" data-del-cat="${cat.id}">Delete</button>
+            </div>
+          </div>`).join('');
+        box.querySelectorAll('[data-edit-cat]').forEach(btn => {
+          btn.onclick = () => openCategoryModal(cats.find(x => x.id === btn.dataset.editCat));
+        });
+        box.querySelectorAll('[data-del-cat]').forEach(btn => {
+          btn.onclick = async () => {
+            if (!(await confirmDelete('Delete this category?'))) return;
+            await fetch('/api/admin/categories/' + btn.dataset.delCat, { method: 'DELETE', credentials: 'include' });
+            loadCategories();
+          };
+        });
+      } catch {
+        box.innerHTML = '<p style="color:#dc2626;">Failed</p>';
+      }
+    }
+
+    // Shrinks big photos in the browser before upload (20MB phone photos -> ~200KB), so saving is instant
+    async function shrinkImage(file, maxSide) {
+      try {
+        if (!file || !/^image\/(jpeg|png|webp|bmp)$/.test(file.type) || file.size < 300 * 1024) return file;
+        const bmp = await createImageBitmap(file);
+        const scale = Math.min(1, (maxSide || 1600) / Math.max(bmp.width, bmp.height));
+        const w = Math.round(bmp.width * scale), h = Math.round(bmp.height * scale);
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        c.getContext('2d').drawImage(bmp, 0, 0, w, h);
+        const keepPng = file.type === 'image/png';
+        const blob = await new Promise(r => c.toBlob(r, keepPng ? 'image/png' : 'image/jpeg', 0.85));
+        if (!blob || blob.size >= file.size) return file;
+        const ext = keepPng ? '.png' : '.jpg';
+        return new File([blob], file.name.replace(/\.[^.]+$/, '') + ext, { type: blob.type });
+      } catch (e) { return file; }
+    }
+    // Disables the Save button while saving (prevents double clicks) and shows progress
+    function setSaving(on) {
+      const b = document.getElementById('formModalSave');
+      if (!b) return;
+      if (on) { b.dataset.t = b.textContent; b.textContent = 'Saving…'; b.disabled = true; }
+      else { b.textContent = b.dataset.t || 'Save'; b.disabled = false; }
+    }
+
+    async function openCategoryModal(cat) {
+      const isEdit = !!cat;
+      // load pages for select
+      let pageOpts = '<option value="">— None —</option>';
+      try {
+        const pr = await fetch('/api/admin/pages', { credentials: 'include' });
+        const pd = await pr.json();
+        (pd.pages || []).forEach(p => {
+          const sel = cat && cat.pageId === p.id ? ' selected' : '';
+          pageOpts += `<option value="${p.id}"${sel}>${escapeHtml(p.title)}</option>`;
+        });
+      } catch {}
+      openModal(isEdit ? 'Edit Category' : 'Create a Category', `
+        <div class="form-group"><label>Name</label>
+          <input type="text" id="mCatName" value="${escapeHtml(cat?.name || '')}" placeholder="e.g. Keys" /></div>
+        <div class="form-group"><label>Description</label>
+          <textarea id="mCatDesc" rows="3">${escapeHtml(cat?.description || '')}</textarea></div>
+        <div class="form-group"><label>Page</label>
+          <select id="mCatPage">${pageOpts}</select></div>
+        <div class="form-group"><label>Logo / Image ${isEdit ? '(leave empty to keep)' : ''}</label>
+          <input type="file" id="mCatImage" accept="image/*" /></div>
+      `);
+      document.getElementById('formModalSave').onclick = async () => {
+        const name = (document.getElementById('mCatName').value || '').trim();
+        const description = (document.getElementById('mCatDesc').value || '').trim();
+        const pageId = document.getElementById('mCatPage').value || '';
+        const msg = document.getElementById('formModalMsg');
+        if (!name) { msg.style.color = '#dc2626'; msg.textContent = 'Name required'; return; }
+        const fd = new FormData();
+        fd.append('name', name);
+        fd.append('description', description);
+        fd.append('pageId', pageId);
+        const img = document.getElementById('mCatImage');
+        if (img && img.files && img.files[0]) fd.append('logo', await shrinkImage(img.files[0], 800));
+        setSaving(true);
+        try {
+          const url = isEdit ? '/api/admin/categories/' + cat.id : '/api/admin/categories';
+          const method = isEdit ? 'PUT' : 'POST';
+          const res = await fetch(url, { method, credentials: 'include', body: fd });
+          const d = await res.json();
+          setSaving(false);
+          if (d.success) { closeModal(); loadCategories(); }
+          else { msg.style.color = '#dc2626'; msg.textContent = d.message || 'Failed'; }
+        } catch { setSaving(false); msg.style.color = '#dc2626'; msg.textContent = 'Network error'; }
+      };
+    }
+
+    document.getElementById('btnCreateCategory')?.addEventListener('click', () => openCategoryModal(null));
+
+    async function loadProducts() {
+      const box = document.getElementById('productsList');
+      if (!box) return;
+      try {
+        const res = await fetch('/api/admin/products', { credentials: 'include' });
+        const d = await res.json();
+        if (!d.success) return;
+        const products = d.products || [];
+        window.__products = products;
+        let catMap = {}, pageMap = {};
+        try {
+          const [cr, pr2] = await Promise.all([fetch('/api/admin/categories', { credentials: 'include' }), fetch('/api/admin/pages', { credentials: 'include' })]);
+          ((await cr.json()).categories || []).forEach(c => { catMap[c.id] = c; });
+          ((await pr2.json()).pages || []).forEach(pg => { pageMap[pg.id] = pg; });
+        } catch {}
+        const where = (pr) => {
+          const c = catMap[pr.categoryId];
+          if (!c) return '';
+          const pg = c.pageId && pageMap[c.pageId] ? pageMap[c.pageId].title : 'General';
+          return ' · ' + escapeHtml(pg) + ' › ' + escapeHtml(c.name);
+        };
+        if (!products.length) {
+          box.innerHTML = '<div class="empty"><p>No products yet. Click "+ Create a Product".</p></div>';
+          return;
+        }
+        box.innerHTML = products.map(pr => `
+          <div class="list-card">
+            ${pr.image ? `<img src="${escapeHtml(pr.image)}" alt="" />` : '<div style="width:48px;height:48px;border-radius:10px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;">🎁</div>'}
+            <div class="info">
+              <strong>${escapeHtml(pr.name || '')}</strong>
+              <div class="meta">₹${Number(pr.price||0).toFixed(2)} · ${(pr.commands||[]).length} command(s)${where(pr)}</div>
+            </div>
+            <div class="actions">
+              <button type="button" class="btn btn-outline btn-sm" data-edit-prod="${pr.id}">Edit</button>
+              <button type="button" class="btn btn-danger btn-sm" data-del-prod="${pr.id}">Delete</button>
+            </div>
+          </div>`).join('');
+        box.querySelectorAll('[data-edit-prod]').forEach(btn => {
+          btn.onclick = () => openProductModal(products.find(x => x.id === btn.dataset.editProd));
+        });
+        box.querySelectorAll('[data-del-prod]').forEach(btn => {
+          btn.onclick = async () => {
+            if (!(await confirmDelete('Delete this product?'))) return;
+            await fetch('/api/admin/products/' + btn.dataset.delProd, { method: 'DELETE', credentials: 'include' });
+            loadProducts();
+          };
+        });
+      } catch {
+        box.innerHTML = '<p style="color:#dc2626;">Failed</p>';
+      }
+    }
+
+    async function openProductModal(pr) {
+      const isEdit = !!pr;
+      let allCats = [], allPages = [];
+      let connOpts = '<option value="">— Auto / any —</option>';
+      const [catR, pageR, connR] = await Promise.all([
+        fetch('/api/admin/categories', { credentials: 'include' }).then(r => r.json()).catch(() => ({})),
+        fetch('/api/admin/pages', { credentials: 'include' }).then(r => r.json()).catch(() => ({})),
+        fetch('/api/admin/connectors', { credentials: 'include' }).then(r => r.json()).catch(() => ({}))
+      ]);
+      allCats = catR.categories || [];
+      allPages = pageR.pages || [];
+      (connR.connectors || []).forEach(cx => {
+        const sel = pr && pr.connectorId === cx.id ? ' selected' : '';
+        connOpts += `<option value="${cx.id}"${sel}>${escapeHtml(cx.name)}</option>`;
+      });
+      // page of the product's current category (for edit)
+      const curCat = pr ? allCats.find(c => c.id === pr.categoryId) : null;
+      const initPage = curCat ? (curCat.pageId || '__general') : '';
+      const hasGeneral = allCats.some(c => !c.pageId);
+      let pageOpts = '<option value="">— Select page —</option>';
+      allPages.forEach(pg => {
+        pageOpts += `<option value="${pg.id}"${initPage === pg.id ? ' selected' : ''}>${escapeHtml(pg.title || pg.id)}</option>`;
+      });
+      if (hasGeneral || initPage === '__general') {
+        pageOpts += `<option value="__general"${initPage === '__general' ? ' selected' : ''}>General (no page)</option>`;
+      }
+      const cmds = (pr?.commands || []).join('\n');
+      const imgPrev = (src) => src ? `<div style="margin-top:0.4rem;"><img src="${escapeHtml(src)}" alt="" style="max-height:70px;border-radius:8px;" /></div>` : '';
+      openModal(isEdit ? 'Edit Product' : 'Create a Product', `
+        <div class="form-group"><label>Name</label>
+          <input type="text" id="mProdName" value="${escapeHtml(pr?.name || '')}" /></div>
+        <div class="form-group"><label>Price (₹)</label>
+          <input type="number" id="mProdPrice" min="0" step="0.01" value="${pr?.price != null ? pr.price : ''}" /></div>
+        <div class="form-group"><label>Page</label>
+          <select id="mProdPage">${pageOpts}</select></div>
+        <div class="form-group"><label>Category (of the selected page)</label>
+          <select id="mProdCat"></select></div>
+
+        <div style="border-top:1px solid rgba(255,255,255,0.08);margin:0.75rem 0 0.6rem;padding-top:0.6rem;font-weight:700;font-size:0.9rem;">🃏 Product card (category page)</div>
+        <div class="form-group"><label>Short description</label>
+          <textarea id="mProdDesc" rows="2" placeholder="Shows on the product card">${escapeHtml(pr?.shortDescription || pr?.description || '')}</textarea></div>
+        <div class="form-group"><label>Card image ${isEdit ? '(leave empty to keep)' : ''}</label>
+          <input type="file" id="mProdImage" accept="image/*" />${imgPrev(pr?.image)}</div>
+
+        <div style="border-top:1px solid rgba(255,255,255,0.08);margin:0.75rem 0 0.6rem;padding-top:0.6rem;font-weight:700;font-size:0.9rem;">🔍 "View Full Product" page</div>
+        <div class="form-group"><label>Long description</label>
+          <textarea id="mProdFullDesc" rows="6" placeholder="Shows only after the customer clicks View Full Product">${escapeHtml(pr?.fullDescription || '')}</textarea></div>
+        <div class="form-group"><label>Full product image ${isEdit ? '(leave empty to keep)' : ''}</label>
+          <input type="file" id="mProdDescImage" accept="image/*" />${imgPrev(pr?.descriptionImage)}</div>
+
+        <div style="border-top:1px solid rgba(255,255,255,0.08);margin:0.75rem 0 0.6rem;padding-top:0.6rem;font-weight:700;font-size:0.9rem;">⚙️ Delivery</div>
+        <div class="form-group"><label>Commands (one per line) — use %playername%</label>
+          <textarea id="mProdCmds" rows="3" placeholder="lp user %playername% parent add vip">${escapeHtml(cmds)}</textarea></div>
+        <div class="form-group"><label>Server connector</label>
+          <select id="mProdConn">${connOpts}</select></div>
+      `);
+
+      const pageSel = document.getElementById('mProdPage');
+      const catSel = document.getElementById('mProdCat');
+      function fillCats() {
+        const pv = pageSel.value;
+        if (!pv) {
+          catSel.innerHTML = '<option value="">— Select a page first —</option>';
+          catSel.disabled = true;
+          return;
+        }
+        const list = allCats.filter(c => pv === '__general' ? !c.pageId : c.pageId === pv);
+        if (!list.length) {
+          catSel.innerHTML = '<option value="">— No category on this page (create one first) —</option>';
+          catSel.disabled = true;
+          return;
+        }
+        catSel.disabled = false;
+        catSel.innerHTML = '<option value="">— Select category —</option>' + list.map(c =>
+          `<option value="${c.id}"${pr && pr.categoryId === c.id ? ' selected' : ''}>${escapeHtml(c.name)}</option>`
+        ).join('');
+      }
+      pageSel.onchange = fillCats;
+      fillCats();
+
+      document.getElementById('formModalSave').onclick = async () => {
+        const name = (document.getElementById('mProdName').value || '').trim();
+        const price = document.getElementById('mProdPrice').value;
+        const categoryId = catSel.value;
+        const shortDescription = document.getElementById('mProdDesc').value || '';
+        const fullDescription = document.getElementById('mProdFullDesc').value || '';
+        const commands = (document.getElementById('mProdCmds').value || '').split('\n').map(s => s.trim()).filter(Boolean);
+        const connectorId = document.getElementById('mProdConn').value || '';
+        const msg = document.getElementById('formModalMsg');
+        if (!name) { msg.style.color = '#dc2626'; msg.textContent = 'Name required'; return; }
+        if (!pageSel.value) { msg.style.color = '#dc2626'; msg.textContent = 'Select a page first'; return; }
+        if (!categoryId) { msg.style.color = '#dc2626'; msg.textContent = 'Select a category'; return; }
+        const fd = new FormData();
+        fd.append('name', name);
+        fd.append('price', price || '0');
+        fd.append('categoryId', categoryId);
+        fd.append('shortDescription', shortDescription);
+        fd.append('description', shortDescription);
+        fd.append('fullDescription', fullDescription);
+        fd.append('commands', JSON.stringify(commands));
+        fd.append('connectorId', connectorId);
+        const img = document.getElementById('mProdImage');
+        if (img && img.files && img.files[0]) fd.append('image', await shrinkImage(img.files[0], 1200));
+        const dimg = document.getElementById('mProdDescImage');
+        if (dimg && dimg.files && dimg.files[0]) fd.append('descriptionImage', await shrinkImage(dimg.files[0], 1600));
+        setSaving(true);
+        try {
+          const url = isEdit ? '/api/admin/products/' + pr.id : '/api/admin/products';
+          const method = isEdit ? 'PUT' : 'POST';
+          const res = await fetch(url, { method, credentials: 'include', body: fd });
+          const d = await res.json();
+          setSaving(false);
+          if (d.success) { closeModal(); loadProducts(); }
+          else { msg.style.color = '#dc2626'; msg.textContent = d.message || 'Failed'; }
+        } catch { setSaving(false); msg.style.color = '#dc2626'; msg.textContent = 'Network error'; }
+      };
+    }
+
+    document.getElementById('btnCreateProduct')?.addEventListener('click', () => openProductModal(null));
+
+    // ===== Shared popup helpers =====
+    // Handlers are attached to the whole document (event delegation), so they work
+    // even though the popup HTML is placed after this script in the page.
+    function on(ev, sel, fn) {
+      document.addEventListener(ev, e => {
+        const el = e.target && e.target.closest ? e.target.closest(sel) : null;
+        if (el) fn(e, el);
+      });
+    }
+    function modalOpen(id) { document.getElementById(id)?.classList.add('show'); }
+    function modalClose(id) { document.getElementById(id)?.classList.remove('show'); }
+
+    // Product checkboxes: always fetched fresh, so newly added products are auto-detected.
+    // Ticked products stay ticked when the list refreshes.
+    async function loadProductChecks(boxId, cls) {
+      const box = document.getElementById(boxId);
+      if (!box) return;
+      const ticked = new Set([...box.querySelectorAll('input.' + cls + ':checked')].map(x => x.value));
+      try {
+        const res = await fetch('/api/admin/products', { credentials: 'include', cache: 'no-store' });
+        const data = await res.json();
+        if (!data.success || !data.products.length) { box.innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;margin:0;">No products yet</p>'; return; }
+        const html = data.products.map(p =>
+          '<label style="display:flex;align-items:center;gap:0.45rem;padding:0.25rem 0;cursor:pointer;font-size:0.9rem;"><input type="checkbox" class="' + cls + '" value="' + p.id + '"' + (ticked.has(p.id) ? ' checked' : '') + ' style="width:auto;" /> ' + escapeHtml(p.name) + ' (₹' + Number(p.price).toFixed(0) + ')</label>'
+        ).join('');
+        if (box.dataset.sig !== html) { box.innerHTML = html; box.dataset.sig = html; }
+      } catch { box.innerHTML = '<p style="color:#f87171;margin:0;">Failed to load products</p>'; }
+    }
+    const productBoxes = [
+      { modal: 'cpModal', wrap: 'cpProductsWrap', box: 'cpProductChecks', cls: 'cp-prod' }
+    ];
+    function refreshOpenProductBoxes() {
+      productBoxes.forEach(pb => {
+        const m = document.getElementById(pb.modal), w = document.getElementById(pb.wrap);
+        if (m && m.classList.contains('show') && w && w.style.display !== 'none') loadProductChecks(pb.box, pb.cls);
+      });
+    }
+    setInterval(refreshOpenProductBoxes, 4000);
+    window.addEventListener('focus', refreshOpenProductBoxes);
+    on('click', '[data-refresh-products]', (e, el) => {
+      e.preventDefault();
+      const pb = productBoxes.find(x => x.box === el.dataset.refreshProducts);
+      if (pb) loadProductChecks(pb.box, pb.cls);
+    });
+
+    // ===== Coupons (popup based) =====
+    async function loadCoupons() {
+      const box = document.getElementById('couponsList');
+      if (!box) return;
+      try {
+        const res = await fetch('/api/admin/coupons', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) return;
+        const list = (data.coupons || []).filter(c => c.kind !== 'referral');
+        if (!list.length) {
+          box.innerHTML = '<p style="color:#94a3b8;">No coupons yet.</p>';
+          return;
+        }
+        box.innerHTML = list.map(c => {
+          const en = c.enabled !== false;
+          const val = c.type === 'percent' ? (c.value + '%') : ('₹' + c.value);
+          const scope = c.scope === 'products' ? ((c.productIds||[]).length + ' products') : 'All products';
+          const uses = (c.usedCount || 0) + (c.maxUses != null ? (' / ' + c.maxUses) : '');
+          return '<div style="border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:0.6rem;display:flex;flex-wrap:wrap;gap:0.75rem;justify-content:space-between;align-items:center;opacity:' + (en?'1':'0.55') + ';">' +
+            '<div><div style="font-weight:800;letter-spacing:0.04em;">' + escapeHtml(c.code) + (en?'':' <span style="color:#f59e0b;font-size:0.75rem;">(Disabled)</span>') + '</div>' +
+            '<div style="font-size:0.85rem;color:#94a3b8;margin-top:0.25rem;">' + val + ' off · ' + scope + ' · Used ' + uses + (c.expiresAt ? ' · Exp ' + escapeHtml(String(c.expiresAt).slice(0,10)) : '') + '</div></div>' +
+            '<div style="display:flex;gap:0.4rem;">' +
+            '<button type="button" class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;" data-cp-toggle="' + c.id + '" data-enabled="' + (en?'1':'0') + '">' + (en?'Disable':'Enable') + '</button>' +
+            '<button type="button" class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;color:#f87171;" data-cp-del="' + c.id + '">Delete</button>' +
+            '</div></div>';
+        }).join('');
+        box.querySelectorAll('[data-cp-del]').forEach(btn => {
+          btn.onclick = async () => {
+            if (!confirm('Delete coupon?')) return;
+            await fetch('/api/admin/coupons/' + btn.dataset.cpDel, { method: 'DELETE', credentials: 'include' });
+            loadCoupons();
+          };
+        });
+        box.querySelectorAll('[data-cp-toggle]').forEach(btn => {
+          btn.onclick = async () => {
+            const next = btn.dataset.enabled !== '1';
+            await fetch('/api/admin/coupons/' + btn.dataset.cpToggle, {
+              method: 'PUT', credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ enabled: next })
+            });
+            loadCoupons();
+          };
+        });
+      } catch {
+        box.innerHTML = '<p style="color:#f87171;">Failed to load</p>';
+      }
+    }
+
+
+    function cpShowMsg(t) { const m = document.getElementById('cpMsg'); m.textContent = t; m.style.display = t ? 'block' : 'none'; }
+    on('click', '#btnOpenCoupon', async () => {
+      ['cpCode','cpValue','cpMinOrder','cpMaxUses','cpExpires','cpNote'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('cpType').value = 'percent';
+      document.getElementById('cpScope').value = 'all';
+      document.getElementById('cpProductsWrap').style.display = 'none';
+      document.getElementById('cpValueLabel').textContent = 'Discount %';
+      cpShowMsg('');
+      modalOpen('cpModal');
+    });
+    on('click', '#cpCancel', () => modalClose('cpModal'));
+    on('click', '#cpModal', (e, el) => { if (e.target === el) modalClose('cpModal'); });
+    on('change', '#cpType', () => {
+      document.getElementById('cpValueLabel').textContent = document.getElementById('cpType').value === 'fixed' ? 'Discount ₹' : 'Discount %';
+    });
+    on('change', '#cpScope', () => {
+      const show = document.getElementById('cpScope').value === 'products';
+      document.getElementById('cpProductsWrap').style.display = show ? 'block' : 'none';
+      if (show) loadProductChecks('cpProductChecks', 'cp-prod');
+    });
+    on('click', '#cpCreate', async (e, btn) => {
+      const code = document.getElementById('cpCode').value.trim();
+      const type = document.getElementById('cpType').value;
+      const value = parseFloat(document.getElementById('cpValue').value);
+      const scope = document.getElementById('cpScope').value;
+      const productIds = [...document.querySelectorAll('.cp-prod:checked')].map(x => x.value);
+      if (isNaN(value) || value <= 0) return cpShowMsg('Enter a valid discount');
+      if (type === 'percent' && value > 100) return cpShowMsg('Percent cannot be more than 100');
+      if (scope === 'products' && !productIds.length) return cpShowMsg('Select at least one product');
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/admin/coupons', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code, autoCode: !code, type, value, scope, productIds,
+            minOrder: parseFloat(document.getElementById('cpMinOrder').value) || 0,
+            maxUses: document.getElementById('cpMaxUses').value || null,
+            expiresAt: document.getElementById('cpExpires').value || null,
+            note: document.getElementById('cpNote').value || '',
+            kind: 'coupon'
+          })
+        });
+        const data = await res.json();
+        if (!data.success) { cpShowMsg(data.message || 'Failed'); return; }
+        modalClose('cpModal');
+        loadCoupons();
+      } catch { cpShowMsg('Failed'); }
+      finally { btn.disabled = false; }
+    });
+
+    // ===== Referral links (popup based) =====
+    function rfShowMsg(t) { const m = document.getElementById('rfMsg'); m.textContent = t; m.style.display = t ? 'block' : 'none'; }
+
+    function fillSelect(id, items, labelFn, emptyText) {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      const cur = sel.value;
+      const html = items.length
+        ? items.map(i => '<option value="' + escapeHtml(i.id) + '">' + labelFn(i) + '</option>').join('')
+        : '<option value="">' + emptyText + '</option>';
+      if (sel.dataset.sig !== html) {
+        sel.innerHTML = html; sel.dataset.sig = html;
+        if (cur && [...sel.options].some(o => o.value === cur)) sel.value = cur;
+      }
+    }
+    // Products and pages are fetched fresh every time, so anything new is auto-detected.
+    async function refreshRefChoices() {
+      const m = document.getElementById('refModal');
+      if (!m || !m.classList.contains('show')) return;
+      try {
+        const [pr, pg] = await Promise.all([
+          fetch('/api/admin/products', { credentials: 'include', cache: 'no-store' }).then(r => r.json()),
+          fetch('/api/admin/pages', { credentials: 'include', cache: 'no-store' }).then(r => r.json())
+        ]);
+        fillSelect('rfProduct', pr.products || [], p => escapeHtml(p.name) + ' (₹' + Number(p.price).toFixed(0) + ')', 'No products yet');
+        fillSelect('rfPage', pg.pages || [], p => escapeHtml(p.title), 'No pages yet');
+      } catch {}
+    }
+    window.refreshRefChoices = refreshRefChoices;
+    setInterval(refreshRefChoices, 4000);
+    window.addEventListener('focus', refreshRefChoices);
+
+    on('click', '#btnOpenRef', async () => {
+      ['rfName','rfValue','rfMaxUses','rfExpires'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('rfPerUser').value = '1';
+      document.getElementById('rfType').value = 'percent';
+      document.getElementById('rfTarget').value = 'product';
+      document.getElementById('rfProductWrap').style.display = 'block';
+      document.getElementById('rfPageWrap').style.display = 'none';
+      document.getElementById('rfValueLabel').textContent = 'Discount %';
+      rfShowMsg('');
+      modalOpen('refModal');
+      await refreshRefChoices();
+    });
+    on('click', '#rfCancel', () => modalClose('refModal'));
+    on('click', '#refModal', (e, el) => { if (e.target === el) modalClose('refModal'); });
+    on('change', '#rfType', () => {
+      document.getElementById('rfValueLabel').textContent = document.getElementById('rfType').value === 'fixed' ? 'Discount ₹' : 'Discount %';
+    });
+    on('change', '#rfTarget', () => {
+      const isPage = document.getElementById('rfTarget').value === 'page';
+      document.getElementById('rfProductWrap').style.display = isPage ? 'none' : 'block';
+      document.getElementById('rfPageWrap').style.display = isPage ? 'block' : 'none';
+      refreshRefChoices();
+    });
+
+    on('click', '#rfCreate', async (e, btn) => {
+      const name = document.getElementById('rfName').value.trim();
+      const target = document.getElementById('rfTarget').value;
+      const type = document.getElementById('rfType').value;
+      const value = parseFloat(document.getElementById('rfValue').value);
+      const productId = document.getElementById('rfProduct').value;
+      const pageId = document.getElementById('rfPage').value;
+      if (!name) return rfShowMsg('Enter a link name');
+      if (target === 'product' && !productId) return rfShowMsg('Select a product');
+      if (target === 'page' && !pageId) return rfShowMsg('Select a page');
+      if (isNaN(value) || value <= 0) return rfShowMsg('Enter a valid discount');
+      if (type === 'percent' && value > 100) return rfShowMsg('Percent cannot be more than 100');
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/admin/coupons', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name, type, value, kind: 'referral', autoCode: true, target,
+            productIds: target === 'product' ? [productId] : [],
+            pageId: target === 'page' ? pageId : null,
+            maxUses: document.getElementById('rfMaxUses').value || null,
+            perUserLimit: document.getElementById('rfPerUser').value || '',
+            expiresAt: document.getElementById('rfExpires').value || null
+          })
+        });
+        const data = await res.json();
+        if (!data.success) { rfShowMsg(data.message || 'Failed'); return; }
+        modalClose('refModal');
+        await loadReferralLinks(data.coupon.id);
+      } catch { rfShowMsg('Failed'); }
+      finally { btn.disabled = false; }
+    });
+
+    async function loadReferralLinks(highlightId) {
+      const box = document.getElementById('referralLinksList');
+      if (!box) return;
+      try {
+        const [res, pres, gres] = await Promise.all([
+          fetch('/api/admin/coupons', { credentials: 'include' }),
+          fetch('/api/admin/products', { credentials: 'include' }),
+          fetch('/api/admin/pages', { credentials: 'include' })
+        ]);
+        const data = await res.json();
+        const pdata = await pres.json().catch(() => ({}));
+        const gdata = await gres.json().catch(() => ({}));
+        const pname = {}; (pdata.products || []).forEach(p => pname[p.id] = p.name);
+        const gname = {}; (gdata.pages || []).forEach(g => gname[g.id] = g.title);
+        if (!data.success) return;
+        const list = (data.coupons || []).filter(c => c.kind === 'referral');
+        if (!list.length) { box.innerHTML = '<p style="color:#94a3b8;">No referral links yet. Click "Create a referral link".</p>'; return; }
+        const now = Date.now();
+        box.innerHTML = list.map(c => {
+          const en = c.enabled !== false;
+          const exp = c.expiresAt ? new Date(String(c.expiresAt).length <= 10 ? c.expiresAt + 'T23:59:59' : c.expiresAt).getTime() : null;
+          const expired = exp != null && exp < now;
+          const full = c.maxUses != null && c.maxUses > 0 && (c.usedCount || 0) >= c.maxUses;
+          const status = !en ? '<span style="color:#f59e0b;">Disabled</span>' : expired ? '<span style="color:#f87171;">Expired</span>' : full ? '<span style="color:#f87171;">Limit reached</span>' : '<span style="color:#4ade80;">Active</span>';
+          const off = c.type === 'fixed' ? ('₹' + c.value + ' off') : (c.value + '% off');
+          const scope = c.scope === 'page'
+            ? ('Page: ' + escapeHtml(gname[c.pageId] || 'Deleted page') + ' (any 1 product)')
+            : c.scope === 'products' ? ('Product: ' + ((c.productIds || []).map(id => escapeHtml(pname[id] || 'Deleted product')).join(', ') || 'Selected')) : 'All products';
+          const uses = (c.usedCount || 0) + ' / ' + (c.maxUses ? c.maxUses : '∞') + (c.perUserLimit ? ' · ' + c.perUserLimit + ' per user' : '');
+          const hl = c.id === highlightId ? 'border-color:#22d3ee;' : '';
+          return '<div style="border:1px solid var(--border);' + hl + 'border-radius:12px;padding:1rem;margin-bottom:0.7rem;opacity:' + (en ? '1' : '0.6') + ';">' +
+            '<div style="display:flex;flex-wrap:wrap;gap:0.75rem;justify-content:space-between;align-items:center;">' +
+              '<div><div style="font-weight:700;">' + escapeHtml(c.name || 'Referral link') + ' · ' + status + '</div>' +
+              '<div style="margin-top:0.35rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">' +
+                '<code style="font-size:1.05rem;letter-spacing:0.08em;padding:0.25rem 0.6rem;border-radius:8px;background:rgba(34,211,238,0.1);color:#67e8f9;">' + escapeHtml(c.code) + '</code>' +
+                '<button type="button" class="btn btn-outline" style="padding:0.25rem 0.6rem;font-size:0.78rem;" data-rf-copy="' + escapeHtml(c.code) + '">Copy code</button>' +
+                '<button type="button" class="btn btn-outline" style="padding:0.25rem 0.6rem;font-size:0.78rem;" data-rf-copylink="' + escapeHtml(c.code) + '">Copy link</button>' +
+              '</div></div>' +
+              '<div style="display:flex;gap:0.4rem;">' +
+                '<button type="button" class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;" data-rf-toggle="' + c.id + '" data-enabled="' + (en ? '1' : '0') + '">' + (en ? 'Disable' : 'Enable') + '</button>' +
+                '<button type="button" class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;color:#f87171;" data-rf-del="' + c.id + '">Delete</button>' +
+              '</div>' +
+            '</div>' +
+            '<div style="font-size:0.85rem;color:#94a3b8;margin-top:0.55rem;">' + off + ' · ' + scope + ' · Users ' + uses + ' · ' + (c.expiresAt ? 'Expires ' + escapeHtml(String(c.expiresAt).slice(0, 10)) : 'No expiry') + '</div>' +
+          '</div>';
+        }).join('');
+        const copy = (txt, btn) => {
+          const done = () => { const o = btn.textContent; btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = o, 1200); };
+          if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done, done); else done();
+        };
+        box.querySelectorAll('[data-rf-copy]').forEach(b => b.onclick = () => copy(b.dataset.rfCopy, b));
+        box.querySelectorAll('[data-rf-copylink]').forEach(b => b.onclick = () => copy(location.origin + '/ref.html?code=' + encodeURIComponent(b.dataset.rfCopylink), b));
+        box.querySelectorAll('[data-rf-del]').forEach(b => b.onclick = async () => {
+          if (!confirm('Delete this referral link?')) return;
+          await fetch('/api/admin/coupons/' + b.dataset.rfDel, { method: 'DELETE', credentials: 'include' });
+          loadReferralLinks();
+        });
+        box.querySelectorAll('[data-rf-toggle]').forEach(b => b.onclick = async () => {
+          await fetch('/api/admin/coupons/' + b.dataset.rfToggle, {
+            method: 'PUT', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ enabled: b.dataset.enabled !== '1' })
+          });
+          loadReferralLinks();
+        });
+      } catch { box.innerHTML = '<p style="color:#f87171;">Failed to load</p>'; }
+    }
+
+        // Pay System
+    function togglePayMode() {
+      const mode = document.getElementById('payMode')?.value || 'manual';
+      const m = document.getElementById('manualPayBox');
+      const g = document.getElementById('gatewayPayBox');
+      if (m) m.style.display = mode === 'manual' ? 'block' : 'none';
+      if (g) g.style.display = mode === 'gateway' ? 'block' : 'none';
+    }
+    function toggleGatewayFields() {
+      const p = document.getElementById('gatewayProvider')?.value || 'razorpay';
+      document.querySelectorAll('.gw-fields').forEach(el => {
+        el.style.display = el.dataset.gw === p ? 'block' : 'none';
+      });
+    }
+    document.getElementById('payMode')?.addEventListener('change', togglePayMode);
+    document.getElementById('gatewayProvider')?.addEventListener('change', toggleGatewayFields);
+
+    
+
+    let __salesSettings = {};
+
+    async function loadSalesPromo() {
+      try {
+        const res = await fetch('/api/admin/settings', { credentials: 'include' });
+        const d = await res.json();
+        if (!d.success) return;
+        __salesSettings = d.settings || {};
+        const s = __salesSettings;
+        const saleMeta = document.getElementById('saleCardMeta');
+        const nuMeta = document.getElementById('newUserCardMeta');
+        const anMeta = document.getElementById('announceCardMeta');
+        if (saleMeta) {
+          saleMeta.textContent = s.saleEnabled
+            ? ('ON · ' + (s.saleTitle || 'Sale') + (s.saleDiscountPercent ? ' · ' + s.saleDiscountPercent + '% OFF' : '') + (s.saleAnimation && s.saleAnimation !== 'none' ? ' · ' + s.saleAnimation : ''))
+            : 'OFF — click Edit to configure';
+        }
+        if (nuMeta) {
+          nuMeta.textContent = s.newUserEnabled
+            ? ('ON · ' + (s.newUserPercent || 0) + '% on first order + register popup')
+            : 'OFF — click Edit to configure';
+        }
+        if (anMeta) {
+          anMeta.textContent = s.announceEnabled
+            ? ('ON · ' + ((s.announceText || 'Announcement').slice(0, 50)))
+            : 'OFF — click Edit to configure';
+        }
+      } catch {}
+    }
+
+    async function saveSalesFields(fields) {
+      const fd = new FormData();
+      Object.keys(fields).forEach(k => fd.append(k, fields[k] == null ? '' : String(fields[k])));
+      const res = await fetch('/api/admin/settings', { method: 'PUT', credentials: 'include', body: fd });
+      return res.json();
+    }
+
+    document.getElementById('btnEditSale')?.addEventListener('click', async () => {
+      const s = __salesSettings || {};
+      let pageOpts = '';
+      try {
+        const pr = await fetch('/api/admin/pages', { credentials: 'include' });
+        const pd = await pr.json();
+        (pd.pages || []).forEach(p => {
+          const sel = s.saleClaimPageId === p.id ? ' selected' : '';
+          pageOpts += '<option value="' + p.id + '"' + sel + '>' + escapeHtml(p.title || p.id) + '</option>';
+        });
+      } catch {}
+      openModal('Edit Site Sale', `
+        <label style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.85rem;cursor:pointer;">
+          <input type="checkbox" id="m_saleEnabled" ${s.saleEnabled ? 'checked' : ''}/> Enable site sale
+        </label>
+        <div class="form-group"><label>Title</label><input type="text" id="m_saleTitle" value="${escapeHtml(s.saleTitle||'')}" placeholder="Winter Sale"/></div>
+        <div class="form-group"><label>Subtitle</label><input type="text" id="m_saleSubtitle" value="${escapeHtml(s.saleSubtitle||'')}" placeholder="10% OFF"/></div>
+        <div class="form-group"><label>Discount %</label><input type="number" id="m_saleDiscountPercent" min="0" max="100" value="${s.saleDiscountPercent!=null?s.saleDiscountPercent:10}"/></div>
+        <div style="display:flex;gap:1rem;margin-bottom:0.75rem;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:0.35rem;cursor:pointer;"><input type="checkbox" id="m_saleShowTopbar" ${s.saleShowTopbar!==false?'checked':''}/> Top bar</label>
+          <label style="display:flex;align-items:center;gap:0.35rem;cursor:pointer;"><input type="checkbox" id="m_saleShowBanner" ${s.saleShowBanner!==false?'checked':''}/> Banner</label>
+        </div>
+        <div class="form-group"><label>Top bar text</label><input type="text" id="m_saleTopbarText" value="${escapeHtml(s.saleTopbarText||'')}"/></div>
+        <div class="form-group"><label>Banner text</label><input type="text" id="m_saleBannerText" value="${escapeHtml(s.saleBannerText||'')}"/></div>
+        <div class="form-group"><label>Claim button text</label><input type="text" id="m_saleClaimText" value="${escapeHtml(s.saleClaimText||'Claim Now')}"/></div>
+        <div class="form-group"><label>Claim → Page</label><select id="m_saleClaimPageId"><option value="">— Home —</option>${pageOpts}</select></div>
+        <div class="form-group"><label>Or custom claim link</label><input type="text" id="m_saleClaimLink" value="${escapeHtml(s.saleClaimLink||'')}" placeholder="https://..."/></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.65rem;">
+          <div class="form-group"><label>Top bar BG</label><input type="color" id="m_saleTopbarBg" value="${s.saleTopbarBg||'#0891b2'}"/></div>
+          <div class="form-group"><label>Top bar text</label><input type="color" id="m_saleTopbarFontColor" value="${s.saleTopbarFontColor||'#ffffff'}"/></div>
+          <div class="form-group"><label>Banner BG</label><input type="color" id="m_saleBannerBg" value="${s.saleBannerBg||'#0e7490'}"/></div>
+          <div class="form-group"><label>Font color</label><input type="color" id="m_saleFontColor" value="${s.saleFontColor||'#ffffff'}"/></div>
+        </div>
+        <div class="form-group"><label>Font</label><select id="m_saleFont"><option value="">Default</option>
+            <option value="Outfit, sans-serif">Outfit</option>
+            <option value="Georgia, serif">Georgia</option>
+            <option value="Courier New, monospace">Courier</option>
+            <option value="Impact, sans-serif">Impact</option>
+            <option value="Comic Sans MS, cursive">Comic Sans</option></select></div>
+        <div class="form-group"><label>Font size</label><input type="text" id="m_saleFontSize" value="${escapeHtml(s.saleFontSize||'')}" placeholder="1.1rem"/></div>
+        <div class="form-group"><label>Animation</label><select id="m_saleAnimation"><option value="none">None</option><option value="snow">Snow</option><option value="rain">Rain</option><option value="confetti">Confetti</option><option value="leaves">Leaves</option><option value="hearts">Hearts</option><option value="stars">Stars</option><option value="bubbles">Bubbles</option><option value="fireworks">Fireworks</option><option value="sakura">Sakura</option><option value="autumn">Autumn</option><option value="sparkle">Sparkle</option><option value="fireflies">Fireflies</option><option value="matrix">Matrix</option><option value="ash">Ash</option><option value="coins">Coins</option><option value="gifts">Gifts</option><option value="petals">Petals</option><option value="dust">Dust</option><option value="fog">Fog</option><option value="aurora">Aurora</option><option value="emoji">Emoji</option><option value="candy">Candy</option><option value="balloons">Balloons</option><option value="feathers">Feathers</option><option value="glitter">Glitter</option><option value="ice">Ice</option><option value="lava">Lava</option><option value="neon">Neon</option><option value="pixels">Pixels</option><option value="rainbow">Rainbow</option><option value="smoke">Smoke</option></select></div>
+      `);
+      const sf = document.getElementById('m_saleFont'); if (sf && s.saleFont) sf.value = s.saleFont;
+      const sa = document.getElementById('m_saleAnimation'); if (sa) sa.value = s.saleAnimation || 'none';
+      document.getElementById('formModalSave').onclick = async () => {
+        const msg = document.getElementById('formModalMsg');
+        const fields = {
+          saleEnabled: document.getElementById('m_saleEnabled').checked ? 'true' : 'false',
+          saleTitle: document.getElementById('m_saleTitle').value,
+          saleSubtitle: document.getElementById('m_saleSubtitle').value,
+          saleDiscountPercent: document.getElementById('m_saleDiscountPercent').value,
+          saleShowTopbar: document.getElementById('m_saleShowTopbar').checked ? 'true' : 'false',
+          saleShowBanner: document.getElementById('m_saleShowBanner').checked ? 'true' : 'false',
+          saleTopbarText: document.getElementById('m_saleTopbarText').value,
+          saleBannerText: document.getElementById('m_saleBannerText').value,
+          saleTopbarBg: document.getElementById('m_saleTopbarBg').value,
+          saleTopbarFontColor: document.getElementById('m_saleTopbarFontColor').value,
+          saleBannerBg: document.getElementById('m_saleBannerBg').value,
+          saleFontColor: document.getElementById('m_saleFontColor').value,
+          saleFont: document.getElementById('m_saleFont').value,
+          saleFontSize: document.getElementById('m_saleFontSize').value,
+          saleAnimation: document.getElementById('m_saleAnimation').value,
+          saleClaimText: document.getElementById('m_saleClaimText')?.value || 'Claim Now',
+          saleClaimPageId: document.getElementById('m_saleClaimPageId')?.value || '',
+          saleClaimLink: document.getElementById('m_saleClaimLink')?.value || ''
+        };
+        try {
+          const d = await saveSalesFields(fields);
+          if (d.success) { closeModal(); loadSalesPromo(); }
+          else { msg.style.color='#dc2626'; msg.textContent=d.message||'Failed'; }
+        } catch { msg.style.color='#dc2626'; msg.textContent='Network error'; }
+      };
+    });
+
+    document.getElementById('btnEditNewUser')?.addEventListener('click', () => {
+      const s = __salesSettings || {};
+      openModal('Edit New User Discount', `
+        <label style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.85rem;cursor:pointer;">
+          <input type="checkbox" id="m_newUserEnabled" ${s.newUserEnabled ? 'checked' : ''}/> Enable first-order discount + popup
+        </label>
+        <div class="form-group"><label>Discount % on first order</label><input type="number" id="m_newUserPercent" min="0" max="100" value="${s.newUserPercent!=null?s.newUserPercent:15}"/></div>
+        <div class="form-group"><label>Popup title</label><input type="text" id="m_newUserPopupTitle" value="${escapeHtml(s.newUserPopupTitle||'')}" placeholder="Claim your new user discount!"/></div>
+        <div class="form-group"><label>Popup text</label><textarea id="m_newUserPopupText" rows="3">${escapeHtml(s.newUserPopupText||'')}</textarea></div>
+      `);
+      document.getElementById('formModalSave').onclick = async () => {
+        const msg = document.getElementById('formModalMsg');
+        try {
+          const d = await saveSalesFields({
+            newUserEnabled: document.getElementById('m_newUserEnabled').checked ? 'true' : 'false',
+            newUserPercent: document.getElementById('m_newUserPercent').value,
+            newUserPopupTitle: document.getElementById('m_newUserPopupTitle').value,
+            newUserPopupText: document.getElementById('m_newUserPopupText').value
+          });
+          if (d.success) { closeModal(); loadSalesPromo(); }
+          else { msg.style.color='#dc2626'; msg.textContent=d.message||'Failed'; }
+        } catch { msg.style.color='#dc2626'; msg.textContent='Network error'; }
+      };
+    });
+
+    document.getElementById('btnEditAnnounce')?.addEventListener('click', async () => {
+      const s = __salesSettings || {};
+      openModal('Edit Announcement', `
+        <label style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.85rem;cursor:pointer;">
+          <input type="checkbox" id="m_announceEnabled" ${s.announceEnabled ? 'checked' : ''}/> Enable announcement bar
+        </label>
+        <div class="form-group"><label>Text</label><input type="text" id="m_announceText" value="${escapeHtml(s.announceText||'')}" placeholder="Server update this Friday!"/></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.65rem;">
+          <div class="form-group"><label>Banner color</label><input type="color" id="m_announceBg" value="${s.announceBg||'#0e7490'}"/></div>
+          <div class="form-group"><label>Font color</label><input type="color" id="m_announceFontColor" value="${s.announceFontColor||'#ffffff'}"/></div>
+        </div>
+        <div class="form-group"><label>Font</label><select id="m_announceFont"><option value="">Default</option>
+            <option value="Outfit, sans-serif">Outfit</option>
+            <option value="Georgia, serif">Georgia</option>
+            <option value="Courier New, monospace">Courier</option>
+            <option value="Impact, sans-serif">Impact</option>
+            <option value="Comic Sans MS, cursive">Comic Sans</option></select></div>
+        <div class="form-group"><label>Font size</label><input type="text" id="m_announceFontSize" value="${escapeHtml(s.announceFontSize||'')}" placeholder="0.95rem"/></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.65rem;">
+          <div class="form-group"><label>Start at (optional)</label><input type="datetime-local" id="m_announceStartAt" value="${s.announceStartAt ? String(s.announceStartAt).slice(0,16) : ''}"/></div>
+          <div class="form-group"><label>End at (optional)</label><input type="datetime-local" id="m_announceEndAt" value="${s.announceEndAt ? String(s.announceEndAt).slice(0,16) : ''}"/></div>
+        </div>
+        <div class="form-group"><label>Animation</label><select id="m_announceAnimation"><option value="none">None</option><option value="snow">Snow</option><option value="rain">Rain</option><option value="confetti">Confetti</option><option value="leaves">Leaves</option><option value="hearts">Hearts</option><option value="stars">Stars</option><option value="bubbles">Bubbles</option><option value="fireworks">Fireworks</option><option value="sakura">Sakura</option><option value="autumn">Autumn</option><option value="sparkle">Sparkle</option><option value="fireflies">Fireflies</option><option value="matrix">Matrix</option><option value="ash">Ash</option><option value="coins">Coins</option><option value="gifts">Gifts</option><option value="petals">Petals</option><option value="dust">Dust</option><option value="fog">Fog</option><option value="aurora">Aurora</option><option value="emoji">Emoji</option><option value="candy">Candy</option><option value="balloons">Balloons</option><option value="feathers">Feathers</option><option value="glitter">Glitter</option><option value="ice">Ice</option><option value="lava">Lava</option><option value="neon">Neon</option><option value="pixels">Pixels</option><option value="rainbow">Rainbow</option><option value="smoke">Smoke</option></select></div>
+      `);
+      const af = document.getElementById('m_announceFont'); if (af && s.announceFont) af.value = s.announceFont;
+      const aa = document.getElementById('m_announceAnimation'); if (aa) aa.value = s.announceAnimation || 'none';
+      document.getElementById('formModalSave').onclick = async () => {
+        const msg = document.getElementById('formModalMsg');
+        try {
+          const d = await saveSalesFields({
+            announceEnabled: document.getElementById('m_announceEnabled').checked ? 'true' : 'false',
+            announceText: document.getElementById('m_announceText').value,
+            announceBg: document.getElementById('m_announceBg').value,
+            announceFontColor: document.getElementById('m_announceFontColor').value,
+            announceFont: document.getElementById('m_announceFont').value,
+            announceFontSize: document.getElementById('m_announceFontSize').value,
+            announceAnimation: document.getElementById('m_announceAnimation').value,
+            announceStartAt: document.getElementById('m_announceStartAt')?.value || '',
+            announceEndAt: document.getElementById('m_announceEndAt')?.value || ''
+          });
+          if (d.success) { closeModal(); loadSalesPromo(); }
+          else { msg.style.color='#dc2626'; msg.textContent=d.message||'Failed'; }
+        } catch { msg.style.color='#dc2626'; msg.textContent='Network error'; }
+      };
+    });
+
+
+    async function loadPaySystem() {
+      try {
+        const res = await fetch('/api/admin/settings', { credentials: 'include' });
+        const d = await res.json();
+        if (!d.success) return;
+        const s = d.settings || {};
+        const set = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.value = v; };
+        set('payMode', s.payMode || 'manual');
+        set('gatewayProvider', s.gatewayProvider || 'razorpay');
+        set('upiId', s.upiId || '');
+        set('gw_razorpay_key_id', s.gw_razorpay_key_id || '');
+        set('gw_razorpay_key_secret', s.gw_razorpay_key_secret || '');
+        set('gw_stripe_publishable', s.gw_stripe_publishable || '');
+        set('gw_stripe_secret', s.gw_stripe_secret || '');
+        set('gw_paypal_client_id', s.gw_paypal_client_id || '');
+        set('gw_paypal_secret', s.gw_paypal_secret || '');
+        set('gw_payu_merchant_key', s.gw_payu_merchant_key || '');
+        set('gw_payu_salt', s.gw_payu_salt || '');
+        set('gw_cashfree_app_id', s.gw_cashfree_app_id || '');
+        set('gw_cashfree_secret', s.gw_cashfree_secret || '');
+        set('gw_phonepe_merchant_id', s.gw_phonepe_merchant_id || '');
+        set('gw_phonepe_salt', s.gw_phonepe_salt || '');
+        set('gw_paytm_mid', s.gw_paytm_mid || '');
+        set('gw_paytm_key', s.gw_paytm_key || '');
+        if (s.upiQr) {
+          const prev = document.getElementById('upiQrPreview');
+          if (prev) prev.innerHTML = '<img src="' + s.upiQr + '" style="max-width:120px;border-radius:8px;" />';
+        }
+        togglePayMode();
+        toggleGatewayFields();
+      } catch {}
+    }
+
+    document.getElementById('btnSavePaySystem')?.addEventListener('click', async () => {
+      const msg = document.getElementById('paySystemMsg');
+      const fd = new FormData();
+      const ids = ['payMode','gatewayProvider','upiId','gw_razorpay_key_id','gw_razorpay_key_secret','gw_stripe_publishable','gw_stripe_secret','gw_paypal_client_id','gw_paypal_secret','gw_payu_merchant_key','gw_payu_salt','gw_cashfree_app_id','gw_cashfree_secret','gw_phonepe_merchant_id','gw_phonepe_salt','gw_paytm_mid','gw_paytm_key'];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) fd.append(id, el.value || '');
+      });
+      const qr = document.getElementById('upiQrFile');
+      if (qr && qr.files && qr.files[0]) fd.append('upiQr', qr.files[0]);
+      try {
+        const res = await fetch('/api/admin/settings', { method: 'PUT', credentials: 'include', body: fd });
+        const d = await res.json();
+        if (msg) {
+          msg.style.color = d.success ? '#059669' : '#dc2626';
+          msg.textContent = d.message || (d.success ? 'Saved!' : 'Failed');
+        }
+      } catch {
+        if (msg) { msg.style.color = '#dc2626'; msg.textContent = 'Network error'; }
+      }
+    });
+
+
+    async function loadPayments() {
+      const box = document.getElementById('paymentsList');
+      if (!window.__payFilterBound) {
+        window.__payFilterBound = true;
+        window.__payFilter = 'all';
+        document.querySelectorAll('[data-pay-filter]').forEach(btn => {
+          btn.onclick = () => {
+            window.__payFilter = btn.dataset.payFilter;
+            document.querySelectorAll('[data-pay-filter]').forEach(b => {
+              b.className = b.dataset.payFilter === window.__payFilter ? 'btn btn-sm' : 'btn btn-outline btn-sm';
+            });
+            loadPayments();
+          };
+        });
+      }
+      if (!box) return;
+      try {
+        const res = await fetch('/api/admin/payments', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) return;
+        let pays = data.payments || [];
+        if (window.__payFilter && window.__payFilter !== 'all') {
+          pays = pays.filter(p => (p.status || 'pending') === window.__payFilter);
+        }
+        if (!pays.length) {
+          box.innerHTML = '<p style="color:#94a3b8;">No payment requests' + (window.__payFilter && window.__payFilter !== 'all' ? ' in this filter' : '') + '.</p>';
+          return;
+        }
+        const statusColor = { pending: '#d97706', approved: '#059669', rejected: '#dc2626', pending_gateway: '#2563eb' };
+        box.innerHTML = pays.map(pay => {
+          const items = (pay.items || []).map(i => escapeHtml(i.name || 'Item') + ' ×' + (i.qty||1)).join(', ');
+          const st = pay.status || 'pending';
+          const badge = st === 'approved' ? 'badge-approved' : st === 'rejected' ? 'badge-rejected' : 'badge-pending';
+          return '<div class="order-card">' +
+            '<div class="row">' +
+              '<div><strong style="font-size:1.05rem;">' + escapeHtml(pay.mcUsername || 'Player') + '</strong>' +
+              ' <span class="badge ' + badge + '" style="margin-left:0.35rem;">' + escapeHtml(st.replace('_',' ')) + '</span></div>' +
+              '<div style="font-weight:800;color:var(--accent-bright);font-size:1.1rem;">₹' + Number(pay.total||0).toFixed(2) + '</div>' +
+            '</div>' +
+            '<div style="font-size:0.92rem;margin-bottom:0.35rem;">' + items + '</div>' +
+            '<div class="detail-grid">' +
+              '<div>Order ID<br><span>#' + escapeHtml(String(pay.id||'').slice(0,8)) + '</span></div>' +
+              '<div>Placed at<br><span>' + fmtDate(pay.createdAt) + '</span></div>' +
+              '<div>Approved / Reviewed<br><span>' + (pay.reviewedAt ? fmtDate(pay.reviewedAt) : '—') + '</span></div>' +
+              '<div>Payment<br><span>' + escapeHtml(pay.provider || (pay.payerUpi ? 'UPI: ' + pay.payerUpi : 'Manual')) + '</span></div>' +
+              (pay.discount ? '<div>Discount<br><span>₹' + Number(pay.discount).toFixed(2) + '</span></div>' : '') +
+              (pay.commandsQueued != null ? '<div>Commands queued<br><span>' + pay.commandsQueued + '</span></div>' : '') +
+            '</div>' +
+            (pay.proof ? '<div style="margin:0.5rem 0;"><a href="' + escapeHtml(pay.proof) + '" target="_blank"><img src="' + escapeHtml(pay.proof) + '" alt="proof" style="width:90px;height:90px;object-fit:cover;border-radius:10px;border:1px solid var(--border);"/></a></div>' : '') +
+            '<div style="display:flex;gap:0.4rem;margin-top:0.5rem;flex-wrap:wrap;">' +
+            ((st === 'pending' || st === 'pending_gateway') ? '<button type="button" class="btn btn-sm" data-pay-approve="' + pay.id + '">Approve</button>' +
+            '<button type="button" class="btn btn-outline btn-sm" data-pay-reject="' + pay.id + '">Reject</button>' : '') +
+            '<button type="button" class="btn btn-danger btn-sm" data-pay-del="' + pay.id + '">Delete</button>' +
+            '</div></div>';
+        }).join('');
+        box.querySelectorAll('[data-pay-approve]').forEach(btn => {
+          btn.onclick = async () => {
+            if (!(await confirmDelete('Approve this order and run server commands?'))) return;
+            btn.disabled = true;
+            await fetch('/api/admin/payments/' + btn.dataset.payApprove + '/approve', { method: 'POST', credentials: 'include' });
+            loadPayments();
+          };
+        });
+        box.querySelectorAll('[data-pay-reject]').forEach(btn => {
+          btn.onclick = async () => {
+            if (!(await confirmDelete('Reject this order?'))) return;
+            await fetch('/api/admin/payments/' + btn.dataset.payReject + '/reject', { method: 'POST', credentials: 'include' });
+            loadPayments();
+          };
+        });
+        box.querySelectorAll('[data-pay-del]').forEach(btn => {
+          btn.onclick = async () => {
+            if (!(await confirmDelete('Delete this order record permanently?'))) return;
+            await fetch('/api/admin/payments/' + btn.dataset.payDel, { method: 'DELETE', credentials: 'include' });
+            loadPayments();
+          };
+        });
+      } catch {
+        box.innerHTML = '<p style="color:#f87171;">Failed to load payments</p>';
+      }
+    }
+
+document.querySelectorAll('.sidebar nav a').forEach(a => {
+      a.addEventListener('click', () => {
+        if (a.dataset.section === 'products') loadProducts();
+        if (a.dataset.section === 'coupons') loadCoupons();
+        if (a.dataset.section === 'referral') loadReferralLinks();
+        if (a.dataset.section === 'payments') loadPayments();
+        if (a.dataset.section === 'paysystem') loadPaySystem();
+        if (a.dataset.section === 'sales') loadSalesPromo();
+        if (a.dataset.section === 'categories') loadCategories();
+      });
+    });
+
+    document.getElementById('btnDownloadPlugin')?.addEventListener('click', () => {
+      window.location.href = '/api/admin/plugin-download';
+    });
+
+  
+    // ===== Quick Links =====
+    async function loadQuickLinks() {
+      const box = document.getElementById('quickLinksList');
+      if (!box) return;
+      try {
+        const res = await fetch('/api/admin/quick-links', { credentials: 'include' });
+        const d = await res.json();
+        const list = d.quickLinks || [];
+        if (!list.length) {
+          box.innerHTML = '<p style="color:#94a3b8;font-size:0.88rem;">No quick links yet.</p>';
+          return;
+        }
+        box.innerHTML = list.map(l => `
+          <div class="list-card" style="margin-bottom:0.5rem;">
+            <div class="info">
+              <strong>${escapeHtml(l.name)}</strong>
+              <div class="meta">${escapeHtml(l.url)}</div>
+            </div>
+            <div class="actions">
+              <button type="button" class="btn btn-outline btn-sm" data-ql-edit="${l.id}">Edit</button>
+              <button type="button" class="btn btn-danger btn-sm" data-ql-del="${l.id}">Delete</button>
+            </div>
+          </div>`).join('');
+        box.querySelectorAll('[data-ql-edit]').forEach(btn => {
+          btn.onclick = () => {
+            const item = list.find(x => x.id === btn.dataset.qlEdit);
+            if (!item) return;
+            openModal('Edit Quick Link', `
+              <div class="form-group"><label>Name</label><input type="text" id="mQlName" value="${escapeHtml(item.name)}" /></div>
+              <div class="form-group"><label>URL</label><input type="text" id="mQlUrl" value="${escapeHtml(item.url)}" placeholder="https:// or /page.html" /></div>
+            `);
+            document.getElementById('formModalSave').onclick = async () => {
+              const name = (document.getElementById('mQlName').value || '').trim();
+              const url = (document.getElementById('mQlUrl').value || '').trim();
+              const msg = document.getElementById('formModalMsg');
+              if (!name || !url) { msg.style.color='#dc2626'; msg.textContent='Name & URL required'; return; }
+              const res = await fetch('/api/admin/quick-links/' + item.id, {
+                method: 'PUT', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, url })
+              });
+              const d = await res.json();
+              if (d.success) { closeModal(); loadQuickLinks(); }
+              else { msg.style.color='#dc2626'; msg.textContent = d.message || 'Failed'; }
+            };
+          };
+        });
+        box.querySelectorAll('[data-ql-del]').forEach(btn => {
+          btn.onclick = async () => {
+            if (!(await confirmDelete('Delete this quick link?'))) return;
+            await fetch('/api/admin/quick-links/' + btn.dataset.qlDel, { method: 'DELETE', credentials: 'include' });
+            loadQuickLinks();
+          };
+        });
+      } catch {
+        box.innerHTML = '<p style="color:#dc2626;">Failed to load</p>';
+      }
+    }
+    document.getElementById('btnAddQuickLink')?.addEventListener('click', () => {
+      openModal('Add Quick Link', `
+        <div class="form-group"><label>Name</label><input type="text" id="mQlName" placeholder="Discord" /></div>
+        <div class="form-group"><label>URL</label><input type="text" id="mQlUrl" placeholder="https://discord.gg/..." /></div>
+      `);
+      document.getElementById('formModalSave').onclick = async () => {
+        const name = (document.getElementById('mQlName').value || '').trim();
+        const url = (document.getElementById('mQlUrl').value || '').trim();
+        const msg = document.getElementById('formModalMsg');
+        if (!name || !url) { msg.style.color='#dc2626'; msg.textContent='Name & URL required'; return; }
+        const res = await fetch('/api/admin/quick-links', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, url })
+        });
+        const d = await res.json();
+        if (d.success) { closeModal(); loadQuickLinks(); }
+        else { msg.style.color='#dc2626'; msg.textContent = d.message || 'Failed'; }
+      };
+    });
+
+
+    // ===== Tickets (admin) =====
+    async function loadTickets() {
+      const box = document.getElementById('ticketsList');
+      if (!box) return;
+      try {
+        const res = await fetch('/api/tickets', { credentials: 'include' });
+        const d = await res.json();
+        const tickets = d.tickets || [];
+        if (!tickets.length) {
+          box.innerHTML = '<div class="empty"><p>No tickets yet.</p></div>';
+          return;
+        }
+        box.innerHTML = tickets.map(t => `
+          <div class="list-card" style="margin-bottom:0.55rem;cursor:pointer;" data-ticket="${t.id}">
+            <div class="info">
+              <strong>${escapeHtml(t.subject)}</strong>
+              <div class="meta">${escapeHtml(t.userName||t.userEmail||'')} · ${t.status} · ${t.messageCount||0} msgs · ${t.updatedAt ? new Date(t.updatedAt).toLocaleString() : ''}</div>
+              <div class="meta">${escapeHtml((t.lastMessage&&t.lastMessage.body)||'').slice(0,80)}</div>
+            </div>
+            <div class="actions">
+              <button type="button" class="btn btn-outline btn-sm" data-ticket-open="${t.id}">Open</button>
+            </div>
+          </div>`).join('');
+        box.querySelectorAll('[data-ticket-open]').forEach(btn => {
+          btn.onclick = (e) => { e.stopPropagation(); openTicketAdmin(btn.dataset.ticketOpen); };
+        });
+      } catch { box.innerHTML = '<p style="color:#dc2626;">Failed to load tickets</p>'; }
+    }
+
+    async function openTicketAdmin(id) {
+      const res = await fetch('/api/tickets/' + id, { credentials: 'include' });
+      const d = await res.json();
+      if (!d.success) return alert(d.message || 'Failed');
+      const t = d.ticket;
+      const msgs = (t.messages || []).map(m => {
+        const isStaff = m.from === 'staff';
+        const imgs = (m.attachments||[]).map(a => `<a href="${escapeHtml(a.url)}" target="_blank" rel="noopener"><img src="${escapeHtml(a.url)}" style="max-width:140px;max-height:140px;border-radius:10px;margin-top:0.35rem;object-fit:cover;display:block;"/></a>`).join('');
+        return `<div style="display:flex;justify-content:${isStaff?'flex-end':'flex-start'};margin-bottom:0.55rem;">
+          <div style="max-width:80%;padding:0.65rem 0.8rem;border-radius:14px;${isStaff
+            ? 'background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;border-bottom-right-radius:4px;'
+            : 'background:var(--card);border:1px solid var(--border);border-bottom-left-radius:4px;'}">
+            <div style="font-size:0.72rem;opacity:0.85;margin-bottom:0.2rem;font-weight:600;">${escapeHtml(m.userName||m.from)}${isStaff?' · Staff':''}</div>
+            <div style="white-space:pre-wrap;font-size:0.9rem;line-height:1.4;">${escapeHtml(m.body)}</div>
+            ${imgs}
+            <div style="font-size:0.68rem;opacity:0.7;margin-top:0.3rem;text-align:right;">${m.createdAt?new Date(m.createdAt).toLocaleString():''}</div>
+          </div>
+        </div>`;
+      }).join('');
+      openModal('💬 ' + (t.subject || 'Ticket'), `
+        <div style="margin-bottom:0.6rem;font-size:0.85rem;color:#94a3b8;display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.35rem;">
+          <span>Status: <strong>${escapeHtml(t.status)}</strong> · ${escapeHtml(t.userName||'')} (${escapeHtml(t.userEmail||'')})</span>
+        </div>
+        <div id="adminChatMsgs" style="max-height:320px;overflow-y:auto;margin-bottom:0.75rem;padding:0.5rem;background:rgba(0,0,0,0.15);border-radius:12px;border:1px solid var(--border);">${msgs}</div>
+        <div class="form-group" style="margin-bottom:0.45rem;"><label>Reply (emoji OK 😊 · Enter to send)</label>
+          <textarea id="mTicketReply" rows="2" placeholder="Type a message..." style="border-radius:12px;"></textarea></div>
+        <div style="display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;">
+          <input type="file" id="mTicketImg" accept="image/*,.heic,.heif,.avif,.bmp,.tiff,.tif,.ico,.svg" style="font-size:0.8rem;flex:1;min-width:120px;" />
+          <button type="button" class="btn btn-sm" id="btnTicketReply">Send</button>
+          <button type="button" class="btn btn-outline btn-sm" id="btnTicketClose">Close</button>
+          <button type="button" class="btn btn-outline btn-sm" id="btnTicketOpen">Reopen</button>
+        </div>
+      `);
+      const saveBtn = document.getElementById('formModalSave');
+      if (saveBtn) saveBtn.style.display = 'none';
+      const chatEl = document.getElementById('adminChatMsgs');
+      if (chatEl) chatEl.scrollTop = chatEl.scrollHeight;
+      const replyTa = document.getElementById('mTicketReply');
+      if (replyTa) replyTa.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('btnTicketReply').click(); }
+      });
+      document.getElementById('btnTicketReply').onclick = async () => {
+        const body = (document.getElementById('mTicketReply').value || '').trim();
+        if (!body) return;
+        const fd = new FormData();
+        fd.append('body', body);
+        fd.append('asStaff', 'true');
+        const img = document.getElementById('mTicketImg');
+        if (img && img.files && img.files[0]) fd.append('image', img.files[0]);
+        const r = await fetch('/api/tickets/' + id + '/reply', { method: 'POST', credentials: 'include', body: fd });
+        const jd = await r.json();
+        if (jd.success) { closeModal(); openTicketAdmin(id); loadTickets(); }
+        else alert(jd.message || 'Failed');
+      };
+      document.getElementById('btnTicketClose').onclick = async () => {
+        await fetch('/api/tickets/' + id + '/status', { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'closed' }) });
+        closeModal(); loadTickets();
+      };
+      document.getElementById('btnTicketOpen').onclick = async () => {
+        await fetch('/api/tickets/' + id + '/status', { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'open' }) });
+        closeModal(); loadTickets();
+      };
+    }
+
+    // openModal third arg skip - need to handle if openModal doesn't support
+    const _origOpenModal = typeof openModal === 'function' ? openModal : null;
+
+</script>
+
+  <!-- Shared Create/Edit Modal (fixed overlay, full scroll) -->
+  <div class="modal-overlay" id="formModal">
+    <div class="modal" id="formModalBox">
+      <h2 id="formModalTitle">Create</h2>
+      <div id="formModalBody"></div>
+      <div id="formModalMsg"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" id="formModalCancel" onclick="window.__closeFormModal && window.__closeFormModal(event)">Cancel</button>
+        <button type="button" class="btn" id="formModalSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coupon create popup -->
+  <div class="modal-overlay" id="cpModal">
+    <div class="modal modal-sm" style="max-width:420px;max-height:92vh;overflow:auto;">
+      <h2>Create coupon</h2>
+      <div class="form-group"><label>Coupon code <span style="color:#94a3b8;font-weight:400;">(empty = auto generate)</span></label><input type="text" id="cpCode" placeholder="WELCOME10" style="text-transform:uppercase;" /></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+        <div class="form-group"><label>Discount type</label><select id="cpType"><option value="percent">% off</option><option value="fixed">Flat ₹ off</option></select></div>
+        <div class="form-group"><label id="cpValueLabel">Discount %</label><input type="number" id="cpValue" min="0" step="0.01" placeholder="10" /></div>
+        <div class="form-group"><label>Min order ₹</label><input type="number" id="cpMinOrder" min="0" placeholder="0" /></div>
+        <div class="form-group"><label>Max uses</label><input type="number" id="cpMaxUses" min="1" step="1" placeholder="Unlimited" /></div>
+      </div>
+      <div class="form-group"><label>Expires on</label><input type="date" id="cpExpires" /></div>
+      <div class="form-group"><label>Apply to</label><select id="cpScope"><option value="all">All products</option><option value="products">Specific products</option></select></div>
+      <div class="form-group" id="cpProductsWrap" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.3rem;"><span style="font-size:0.8rem;color:#94a3b8;">New products appear automatically</span><a href="#" data-refresh-products="cpProductChecks" style="font-size:0.8rem;color:#67e8f9;">↻ Refresh</a></div>
+        <div id="cpProductChecks" style="max-height:170px;overflow:auto;border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:0.6rem;"></div>
+      </div>
+      <div class="form-group"><label>Note (optional)</label><input type="text" id="cpNote" maxlength="80" placeholder="Launch offer" /></div>
+      <div id="cpMsg" style="font-size:0.88rem;color:#f87171;display:none;"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" id="cpCancel">Cancel</button>
+        <button type="button" class="btn" id="cpCreate">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Update upload popup -->
+  <div class="modal-overlay" id="updModal">
+    <div class="modal modal-sm" style="max-width:460px;max-height:92vh;overflow:auto;">
+      <h2>Upload new version</h2>
+      <p style="opacity:.8;font-size:.88rem;margin:0 0 12px;">Select the new <b>.zip</b>, check it, then apply. A backup is made automatically.</p>
+      <input type="file" id="upd-file" accept=".zip,application/zip" style="margin-bottom:12px;max-width:100%" />
+      <div><button type="button" class="btn" id="upd-check">1. Check zip</button></div>
+      <div class="msg" id="upd-msg" style="margin-top:12px"></div>
+      <div id="upd-result" style="display:none;margin-top:14px"></div>
+      <div class="modal-actions"><button type="button" class="btn btn-outline" id="upd-close">Close</button></div>
+    </div>
+  </div>
+
+  <!-- Referral link create popup -->
+  <div class="modal-overlay" id="refModal">
+    <div class="modal modal-sm" style="max-width:420px;">
+      <h2>Create referral link</h2>
+      <div class="form-group"><label>Link name</label><input type="text" id="rfName" maxlength="60" placeholder="e.g. YouTuber Rahul" /></div>
+      <div class="form-group"><label>Link for</label>
+        <select id="rfTarget"><option value="product">A specific product</option><option value="page">A page (customer picks any 1 product)</option></select>
+      </div>
+      <div class="form-group" id="rfProductWrap">
+        <label>Product <span style="color:#94a3b8;font-weight:400;font-size:0.8rem;">(new products appear automatically)</span></label>
+        <select id="rfProduct"></select>
+        <div style="font-size:0.8rem;color:#94a3b8;margin-top:0.3rem;">Link opens this product page with the offer shown and an Add to Cart button.</div>
+      </div>
+      <div class="form-group" id="rfPageWrap" style="display:none;">
+        <label>Page <span style="color:#94a3b8;font-weight:400;font-size:0.8rem;">(new pages appear automatically)</span></label>
+        <select id="rfPage"></select>
+        <div style="font-size:0.8rem;color:#94a3b8;margin-top:0.3rem;">Customer gets the discount on any ONE product of this page, of their choice.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+        <div class="form-group"><label>Discount type</label>
+          <select id="rfType"><option value="percent">% off</option><option value="fixed">Flat ₹ off</option></select>
+        </div>
+        <div class="form-group"><label id="rfValueLabel">Discount %</label><input type="number" id="rfValue" min="0" step="0.1" placeholder="10" /></div>
+        <div class="form-group"><label>Max users (total)</label><input type="number" id="rfMaxUses" min="1" step="1" placeholder="Unlimited" /></div>
+        <div class="form-group"><label>Uses per user</label><input type="number" id="rfPerUser" min="1" step="1" value="1" placeholder="Unlimited" /></div>
+      </div>
+      <div class="form-group"><label>Expires on</label><input type="date" id="rfExpires" /></div>
+      <div id="rfMsg" style="font-size:0.88rem;color:#f87171;display:none;"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" id="rfCancel">Cancel</button>
+        <button type="button" class="btn" id="rfCreate">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Delete Modal -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal modal-sm">
+      <h2>Confirm</h2>
+      <p id="confirmText" style="color:#94a3b8;margin-bottom:0.75rem;">Are you sure?</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" id="confirmNo" style="cursor:pointer;" onclick="window.__closeConfirm && window.__closeConfirm(false); return false;">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmYes" style="cursor:pointer;background:#dc2626;color:#fff;" onclick="window.__closeConfirm && window.__closeConfirm(true); return false;">Delete</button>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+  (function () {
+    var token = '';
+    var $ = function (id) { return document.getElementById(id); };
+    var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); };
+    function msg(text, ok) {
+      var inModal = $('updModal').classList.contains('show');
+      var m = $(inModal ? 'upd-msg' : 'upd-msg-main');
+      m.className = 'msg ' + (ok ? 'ok' : 'err'); m.textContent = text; m.style.display = text ? 'block' : 'none';
+    }
+    $('upd-open').onclick = function () {
+      $('upd-file').value = ''; $('upd-result').style.display = 'none'; $('upd-result').innerHTML = ''; token = '';
+      $('upd-msg').style.display = 'none'; $('upd-msg-main').style.display = 'none';
+      $('updModal').classList.add('show');
+    };
+    $('upd-close').onclick = function () { $('updModal').classList.remove('show'); };
+    $('updModal').addEventListener('click', function (e) { if (e.target === this) this.classList.remove('show'); });
+    function when(t) { try { return new Date(t).toLocaleString(); } catch (e) { return t; } }
+
+    function act(url, body, okText) {
+      fetch(url, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        .then(function (r) { return r.json(); })
+        .then(function (d) { if (!d.success) return msg(d.message || 'Error', false); msg(okText, true); loadInfo(); })
+        .catch(function () { msg('Request failed. Please try again.', false); });
+    }
+
+    function loadInfo() {
+      fetch('/api/admin/update/info', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (d) {
+        if (!d.success) return;
+        $('upd-current').innerHTML = 'Current version: <b>' + esc(d.version || 'unknown') + '</b> &nbsp;|&nbsp; Node ' + esc(d.node) +
+          (!d.launcher ? '<div style="margin-top:8px;color:#d97706">&#9888; Auto-restart is limited on this host (it does not allow background processes). After an update the site will try to restart itself; if it stays offline, restart it once from your hosting panel.</div>' : '<div style="margin-top:8px;color:#16a34a">&#10003; Auto-restart is active.</div>');
+        $('upd-backups').innerHTML = d.backups.length ? d.backups.map(function (b) {
+          return '<div style="display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(128,128,128,.2)"><span>' + esc(when(b.at)) + (b.version ? ' (v' + esc(b.version) + ')' : '') + '</span><span style="display:flex;gap:8px"><button class="btn btn-outline" data-rb="' + esc(b.id) + '">Rollback</button><button class="btn btn-outline" style="color:#dc2626;border-color:#dc2626" data-del="' + esc(b.id) + '">Delete</button></span></div>';
+        }).join('') : '<span style="opacity:.7">No backups available yet.</span>';
+        $('upd-history').innerHTML = d.history.length ? d.history.map(function (h) {
+          return '<div style="display:flex;gap:10px;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(128,128,128,.2)"><span>' + esc(when(h.at)) + ' - ' + (h.rollback ? 'Rollback' : ('v' + esc(h.from || '?') + ' &rarr; v' + esc(h.to || '?') + ' (' + (h.added || 0) + ' new, ' + (h.changed || 0) + ' changed)')) + '</span><button class="btn btn-outline" style="color:#dc2626;border-color:#dc2626" data-hdel="' + esc(h.at) + '">Delete</button></div>';
+        }).join('') : '<span style="opacity:.7">No updates have been applied yet.</span>';
+        document.querySelectorAll('[data-del]').forEach(function (b) {
+          b.onclick = function () {
+            if (!confirm('Delete this backup permanently? You will no longer be able to roll back to it.')) return;
+            act('/api/admin/update/delete-backup', { id: b.getAttribute('data-del') }, 'Backup deleted.');
+          };
+        });
+        document.querySelectorAll('[data-hdel]').forEach(function (b) {
+          b.onclick = function () {
+            if (!confirm('Remove this entry from the update history? Backups are not affected.')) return;
+            act('/api/admin/update/delete-history', { at: b.getAttribute('data-hdel') }, 'History entry deleted.');
+          };
+        });
+        document.querySelectorAll('[data-rb]').forEach(function (b) {
+          b.onclick = function () {
+            if (!confirm('Do you want to restore the code to this backup? The website will restart. Your data will remain safe.')) return;
+            post('/api/admin/update/rollback', { id: b.getAttribute('data-rb') }, 'Rolling back...');
+          };
+        });
+      });
+    }
+
+    function waitForRestart() {
+      msg('The website is restarting... this page will reload automatically.', true);
+      var tries = 0;
+      var t = setInterval(function () {
+        tries++;
+        fetch('/api/settings', { cache: 'no-store' }).then(function (r) {
+          if (r.ok && tries > 2) { clearInterval(t); location.reload(); }
+        }).catch(function () {});
+        if (tries > 60) { clearInterval(t); msg('The restart is taking longer than expected. Please restart the server from your hosting panel and reload the page.', false); }
+      }, 2000);
+    }
+
+    function post(url, body, busyText) {
+      msg(busyText, true);
+      return fetch(url, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        .then(function (r) { return r.json(); })
+        .then(function (d) { if (!d.success) { msg(d.message || 'Error', false); return; } waitForRestart(); })
+        .catch(function () { waitForRestart(); });
+    }
+
+    $('upd-check').onclick = function () {
+      var f = $('upd-file').files[0];
+      if (!f) return msg('Please select a zip file first', false);
+      $('upd-result').style.display = 'none'; token = '';
+      msg('Checking the zip file...', true);
+      fetch('/api/admin/update/check', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/octet-stream' }, body: f })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (!d.success) return msg(d.message || 'Check failed', false);
+          var r = d.result; token = r.token;
+          msg('The zip file is valid. Review the details below and apply the update.', true);
+          var h = '<div style="line-height:1.7">Version: <b>' + esc(r.currentVersion || '?') + '</b> &rarr; <b>' + esc(r.newVersion || '?') + '</b><br>' +
+            '<b>' + r.added + '</b> new files, <b>' + r.changed + '</b> changed, ' + r.same + ' same<br>' +
+            '<span style="opacity:.8">Data/uploads/login protected (' + r.protectedSkipped + ' protected files were ignored from the zip)</span></div>';
+          (r.warnings || []).forEach(function (w) { h += '<div style="margin-top:8px;color:#d97706">&#9888; ' + esc(w) + '</div>'; });
+          if (r.changedFiles.length) h += '<details style="margin-top:10px"><summary style="cursor:pointer">View changed files</summary><pre style="white-space:pre-wrap;font-size:.8rem;max-height:240px;overflow:auto">' + esc(r.changedFiles.join('\n')) + (r.moreFiles ? '\n... +' + r.moreFiles + ' more' : '') + '</pre></details>';
+          h += '<div style="margin-top:14px"><button type="button" class="btn" id="upd-apply">2. Apply update &amp; restart</button></div>';
+          var box = $('upd-result'); box.innerHTML = h; box.style.display = 'block';
+          $('upd-apply').onclick = function () {
+            if (!confirm('Apply this update? The website will restart for about 5-10 seconds.')) return;
+            this.disabled = true;
+            post('/api/admin/update/apply', { token: token }, 'Creating a backup and applying the update...');
+          };
+        })
+        .catch(function () { msg('Upload failed. Please try again', false); });
+    };
+
+    document.querySelectorAll('.sidebar nav a').forEach(function (a) {
+      a.addEventListener('click', function () { if (a.dataset.section === 'update') loadInfo(); });
+    });
+  })();
+  </script>
+<script src="/admin/modules-admin.js?v=1.4.1"></script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Orders</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f0fdfa; --card: #ffffff; --accent: #0891b2; --accent2: #0e7490;
+      --text: #0f172a; --muted: #475569; --border: rgba(8,145,178,0.22);
+      --success: #059669; --warn: #d97706; --danger: #dc2626;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Outfit', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.5rem; border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); z-index: 10;
+    }
+    nav a { color: var(--text); text-decoration: none; font-weight: 700; }
+    nav .back { color: var(--muted); font-weight: 500; font-size: 0.9rem; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 1.75rem 1.25rem 4rem; }
+    h1 { font-size: 1.65rem; font-weight: 800; margin-bottom: 1.25rem; }
+    .order {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 1.15rem; margin-bottom: 0.85rem;
+    }
+    .order-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.65rem; }
+    .order-id { font-size: 0.8rem; color: var(--muted); }
+    .badge {
+      display: inline-block; padding: 0.25rem 0.65rem; border-radius: 8px;
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+    }
+    .badge-pending { background: rgba(217,119,6,0.15); color: var(--warn); }
+    .badge-approved { background: rgba(5,150,105,0.15); color: var(--success); }
+    .badge-rejected { background: rgba(220,38,38,0.12); color: var(--danger); }
+    .items { font-size: 0.92rem; margin-bottom: 0.5rem; }
+    .meta { font-size: 0.82rem; color: var(--muted); }
+    .total { font-weight: 800; color: var(--accent2); margin-top: 0.35rem; }
+    .empty { text-align: center; padding: 3rem 1rem; color: var(--muted); }
+    .empty a { color: var(--accent2); font-weight: 700; }
+    .login-need { text-align: center; padding: 3rem 1rem; }
+    .login-need a { color: var(--accent2); font-weight: 700; }
+  </style>
+<script src="/js/site-brand.js" defer></script>
+</head>
+<body>
+  <nav>
+    <a href="/">⛏️ Store</a>
+    <a href="/" class="back">← Back</a>
+  </nav>
+  <div class="wrap">
+    <h1>📦 My Orders</h1>
+    <div id="list"><p style="color:var(--muted);">Loading...</p></div>
+  </div>
+  <script>
+    function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    async function load(){
+      const box = document.getElementById('list');
+      try{
+        const r = await fetch('/api/me', { credentials: 'include' });
+        const d = await r.json();
+        if(!d.success || !d.user){
+          box.innerHTML = '<div class="login-need"><p>Please <a href="/login.html?next=/my-orders.html">login</a> to see your orders.</p></div>';
+          return;
+        }
+        const res = await fetch('/api/my-payments', { credentials: 'include' });
+        const data = await res.json();
+        if(!data.success || !data.payments || !data.payments.length){
+          box.innerHTML = '<div class="empty"><p>No orders yet.</p><p><a href="/">Browse store →</a></p></div>';
+          return;
+        }
+        box.innerHTML = data.payments.map(p => {
+          const st = p.status || 'pending';
+          const badge = st === 'approved' ? 'badge-approved' : st === 'rejected' ? 'badge-rejected' : 'badge-pending';
+          const items = (p.items || []).map(i => escapeHtml(i.name || 'Item') + ' ×' + (i.qty||1)).join(', ');
+          const date = p.createdAt ? new Date(p.createdAt).toLocaleString() : '';
+          return '<div class="order"><div class="order-top"><span class="order-id">#' + escapeHtml(String(p.id).slice(0,8)) + '</span><span class="badge ' + badge + '">' + st + '</span></div>' +
+            '<div class="items">' + items + '</div>' +
+            '<div class="meta">' + escapeHtml(date) + (p.discount ? ' · Discount ₹' + p.discount : '') + '</div>' +
+            '<div class="total">₹' + Number(p.total||0).toFixed(2) + '</div></div>';
+        }).join('');
+      }catch{
+        box.innerHTML = '<p style="color:#dc2626;">Failed to load</p>';
+      }
+    }
+    load();
+  </script>
+<script src="/js/promo.js"></script>
+</body>
+</html>

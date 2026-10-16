@@ -1,0 +1,12 @@
+{
+  "name": "minecraft-store",
+  "version": "1.4.1",
+  "description": "Minecraft store website",
+  "main": "server.js",
+  "scripts": {
+    "start": "node launcher.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Cart</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/shop.css" />
+  <script src="/js/site-brand.js" defer></script>
+</head>
+<body>
+  <nav>
+    <a href="/">⛏️ Store</a>
+    <div class="links">
+      <a href="/my-orders.html">My Orders</a>
+      <a href="/">← Continue shopping</a>
+    </div>
+  </nav>
+
+  <div class="wrap">
+    <h1>🛒 Your Cart</h1>
+    <p class="sub" id="cartSub">Review your items</p>
+
+    <div class="steps">
+      <div class="step active" id="step1">1. Cart</div>
+      <div class="step" id="step2">2. Review</div>
+      <div class="step" id="step3">3. Payment</div>
+      <div class="step" id="step4">4. Done</div>
+    </div>
+
+    <div id="loginBanner" class="login-banner" style="display:none;">
+      Please <a href="/login.html?next=/cart.html">login</a> or <a href="/register.html?next=/cart.html">register</a> to checkout.
+    </div>
+
+    <div id="items"></div>
+    <div id="empty" class="empty" style="display:none;">
+      <div class="icon">🛒</div>
+      <p>Your cart is empty</p>
+      <a href="/" class="btn btn-link">Browse Store</a>
+    </div>
+
+    <div id="cartFooter" style="display:none;">
+      <div class="summary" id="summary"></div>
+      <div class="actions-row">
+        <a href="/" class="btn btn-outline btn-link">← Continue Shopping</a>
+        <button type="button" class="btn" id="btnCheckout">Checkout →</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function getCart(){ try{ return JSON.parse(localStorage.getItem('mc_cart')||'[]'); }catch{ return []; } }
+    function setCart(c){ localStorage.setItem('mc_cart', JSON.stringify(c)); }
+
+    let loggedIn = false;
+    async function checkAuth(){
+      try{
+        const r = await fetch('/api/me', { credentials: 'include' });
+        const d = await r.json();
+        loggedIn = !!(d.success && d.user);
+      }catch{ loggedIn = false; }
+      document.getElementById('loginBanner').style.display = loggedIn ? 'none' : 'block';
+    }
+
+    function render(){
+      const cart = getCart();
+      const itemsEl = document.getElementById('items');
+      const empty = document.getElementById('empty');
+      const footer = document.getElementById('cartFooter');
+
+      if(!cart.length){
+        itemsEl.innerHTML = '';
+        empty.style.display = 'block';
+        footer.style.display = 'none';
+        document.getElementById('cartSub').textContent = 'No items yet';
+        document.getElementById('step1').className = 'step';
+        return;
+      }
+      empty.style.display = 'none';
+      footer.style.display = 'block';
+
+      let subtotal = 0, totalQty = 0;
+      itemsEl.innerHTML = cart.map((it, idx) => {
+        const qty = it.qty || 1;
+        const line = (it.price || 0) * qty;
+        subtotal += line; totalQty += qty;
+        return '<div class="item">' +
+          (it.image ? '<img src="' + escapeHtml(it.image) + '" alt="" />' : '<div style="width:72px;height:72px;border-radius:12px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🎁</div>') +
+          '<div class="info"><div class="name">' + escapeHtml(it.name) + '</div>' +
+          '<div class="unit">₹' + Number(it.price).toFixed(2) + ' each</div>' +
+          '<div class="line">₹' + line.toFixed(2) + '</div></div>' +
+          '<div class="qty">' +
+          '<button type="button" data-dec="' + idx + '">−</button><span>' + qty + '</span>' +
+          '<button type="button" data-inc="' + idx + '">+</button></div>' +
+          '<button type="button" class="remove" data-rm="' + idx + '">Remove</button></div>';
+      }).join('');
+
+      document.getElementById('cartSub').textContent = cart.length + ' product' + (cart.length>1?'s':'') + ' in cart';
+
+      itemsEl.querySelectorAll('[data-inc]').forEach(btn => {
+        btn.onclick = () => { const c = getCart(); const i = Number(btn.dataset.inc); c[i].qty = Math.min(99, (c[i].qty||1) + 1); setCart(c); render(); };
+      });
+      itemsEl.querySelectorAll('[data-dec]').forEach(btn => {
+        btn.onclick = () => { const c = getCart(); const i = Number(btn.dataset.dec); c[i].qty = Math.max(1, (c[i].qty||1) - 1); setCart(c); render(); };
+      });
+      itemsEl.querySelectorAll('[data-rm]').forEach(btn => {
+        btn.onclick = () => { const c = getCart(); c.splice(Number(btn.dataset.rm), 1); setCart(c); render(); };
+      });
+
+      document.getElementById('summary').innerHTML =
+        '<div class="summary-row"><span>Products</span><span>' + cart.length + '</span></div>' +
+        '<div class="summary-row"><span>Total quantity</span><span>' + totalQty + '</span></div>' +
+        '<div class="summary-row total"><span>Subtotal</span><span>₹' + subtotal.toFixed(2) + '</span></div>';
+    }
+
+    document.getElementById('btnCheckout').onclick = () => {
+      if(!getCart().length) return;
+      location.href = loggedIn ? '/checkout.html' : '/login.html?next=' + encodeURIComponent('/checkout.html');
+    };
+
+    checkAuth().then(() => {
+      render();
+      // referral link support: /cart.html?ref=CODE (applied on the review page)
+      try {
+        const q = new URLSearchParams(location.search);
+        const rc = (q.get('ref') || q.get('code') || '').trim().toUpperCase();
+        let cur = null; try { cur = JSON.parse(localStorage.getItem('mc_ref')||'null'); } catch {}
+        if (rc && !(cur && cur.code === rc)) localStorage.setItem('mc_ref', JSON.stringify({ code: rc, productId: '' }));
+      } catch (e) {}
+    });
+  </script>
+<script src="/js/promo.js"></script>
+</body>
+</html>

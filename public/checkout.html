@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order Review</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/shop.css" />
+  <script src="/js/site-brand.js" defer></script>
+</head>
+<body>
+  <nav>
+    <a href="/">⛏️ Store</a>
+    <div class="links">
+      <a href="/my-orders.html">My Orders</a>
+      <a href="/cart.html">← Back to Cart</a>
+    </div>
+  </nav>
+
+  <div class="wrap wide">
+    <h1>🧾 Order Review</h1>
+    <p class="sub" id="sub">Check all details, add a coupon, then continue to payment</p>
+
+    <div class="steps">
+      <div class="step done">1. Cart</div>
+      <div class="step active">2. Review</div>
+      <div class="step">3. Payment</div>
+      <div class="step">4. Done</div>
+    </div>
+
+    <div id="loginBanner" class="login-banner" style="display:none;">
+      Please <a href="/login.html?next=/checkout.html">login</a> or <a href="/register.html?next=/checkout.html">register</a> to continue.
+    </div>
+
+    <div id="empty" class="empty" style="display:none;">
+      <div class="icon">🛒</div>
+      <p>Your cart is empty</p>
+      <a href="/" class="btn btn-link">Browse Store</a>
+    </div>
+
+    <div id="main" class="two-col" style="display:none;">
+      <div class="panel">
+        <h2>Order details</h2>
+        <table class="lines">
+          <thead><tr><th>Product</th><th class="num">Price</th><th class="num">Qty</th><th class="num">Total</th></tr></thead>
+          <tbody id="lines"></tbody>
+        </table>
+      </div>
+
+      <div>
+        <div class="panel">
+          <h2>Summary</h2>
+          <div id="summary"></div>
+          <h2 style="margin-top:1rem;">Coupon / referral code</h2>
+          <div class="coupon-row">
+            <input type="text" id="couponCode" placeholder="Enter code" style="text-transform:uppercase;" />
+            <button type="button" class="btn btn-outline" id="btnApplyCoupon" style="width:auto;padding:0.65rem 1.1rem;">Apply</button>
+            <button type="button" class="btn btn-outline" id="btnClearCoupon" style="width:auto;padding:0.65rem 1.1rem;display:none;">Clear</button>
+          </div>
+          <div id="couponMsg" style="font-size:0.88rem;"></div>
+          <div class="actions-row">
+            <a href="/cart.html" class="btn btn-outline btn-link">← Cart</a>
+            <button type="button" class="btn" id="btnCheckout">Checkout →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function getCart(){ try{ return JSON.parse(localStorage.getItem('mc_cart')||'[]'); }catch{ return []; } }
+    function getRef(){ try{ return JSON.parse(localStorage.getItem('mc_ref')||'null'); }catch{ return null; } }
+    function getSavedCoupon(){ try{ return JSON.parse(localStorage.getItem('mc_coupon')||'null'); }catch{ return null; } }
+
+    let loggedIn = false;
+    let appliedCoupon = null;
+
+    async function checkAuth(){
+      try{
+        const r = await fetch('/api/me', { credentials: 'include' });
+        const d = await r.json();
+        loggedIn = !!(d.success && d.user);
+      }catch{ loggedIn = false; }
+      document.getElementById('loginBanner').style.display = loggedIn ? 'none' : 'block';
+    }
+
+    function render(){
+      const cart = getCart();
+      if(!cart.length){
+        document.getElementById('main').style.display = 'none';
+        document.getElementById('empty').style.display = 'block';
+        document.getElementById('sub').textContent = 'No items yet';
+        return;
+      }
+      document.getElementById('empty').style.display = 'none';
+      document.getElementById('main').style.display = 'grid';
+
+      let subtotal = 0, totalQty = 0;
+      document.getElementById('lines').innerHTML = cart.map(it => {
+        const qty = it.qty || 1;
+        const line = (it.price || 0) * qty;
+        subtotal += line; totalQty += qty;
+        return '<tr><td>' +
+          (it.image ? '<img class="pimg" src="' + escapeHtml(it.image) + '" alt="" />' : '') +
+          '<span class="pname">' + escapeHtml(it.name) + '</span></td>' +
+          '<td class="num">₹' + Number(it.price).toFixed(2) + '</td>' +
+          '<td class="num">× ' + qty + '</td>' +
+          '<td class="num"><b>₹' + line.toFixed(2) + '</b></td></tr>';
+      }).join('');
+
+      const discount = appliedCoupon ? (appliedCoupon.discount || 0) : 0;
+      const total = Math.max(0, subtotal - discount);
+      document.getElementById('summary').innerHTML =
+        '<div class="summary-row"><span>Total products</span><span>' + cart.length + '</span></div>' +
+        '<div class="summary-row"><span>Total quantity</span><span>' + totalQty + '</span></div>' +
+        '<div class="summary-row"><span>Subtotal</span><span>₹' + subtotal.toFixed(2) + '</span></div>' +
+        (discount > 0 ? '<div class="summary-row"><span>Discount' + (appliedCoupon.code ? ' (' + escapeHtml(appliedCoupon.code) + ')' : '') + '</span><span class="disc">−₹' + discount.toFixed(2) + '</span></div>' : '') +
+        '<div class="summary-row total"><span>Total payable</span><span>₹' + total.toFixed(2) + '</span></div>';
+    }
+
+    async function applyCode(code, refProductId, silent){
+      const msg = document.getElementById('couponMsg');
+      code = (code || '').trim();
+      if(!code){ msg.style.color = '#dc2626'; msg.textContent = 'Enter a code'; return false; }
+      const cart = getCart();
+      try{
+        const res = await fetch('/api/validate-coupon', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, refProductId: refProductId || '', items: cart.map(i => ({ productId: i.productId, qty: i.qty||1 })) })
+        });
+        const data = await res.json();
+        if(data.success){
+          appliedCoupon = { code: data.code, discount: data.discount, refProductId: data.appliedProductId || refProductId || '' };
+          localStorage.setItem('mc_coupon', JSON.stringify({ code: appliedCoupon.code, refProductId: appliedCoupon.refProductId }));
+          document.getElementById('couponCode').value = data.code;
+          msg.style.color = '#059669';
+          msg.textContent = data.message || ('Applied! ₹' + data.discount + ' off');
+          document.getElementById('btnClearCoupon').style.display = 'inline-block';
+          render();
+          return true;
+        }
+        appliedCoupon = null;
+        localStorage.removeItem('mc_coupon');
+        if(!silent){ msg.style.color = '#dc2626'; msg.textContent = data.message || 'Invalid code'; }
+        render();
+      }catch{
+        if(!silent){ msg.style.color = '#dc2626'; msg.textContent = 'Failed to validate'; }
+      }
+      return false;
+    }
+
+    document.getElementById('btnApplyCoupon').onclick = () => {
+      const code = (document.getElementById('couponCode').value || '').trim();
+      const ref = getRef();
+      applyCode(code, ref && ref.code === code.toUpperCase() ? ref.productId : '', false);
+    };
+    document.getElementById('btnClearCoupon').onclick = () => {
+      appliedCoupon = null;
+      localStorage.removeItem('mc_ref'); localStorage.removeItem('mc_coupon');
+      document.getElementById('couponCode').value = '';
+      document.getElementById('couponMsg').textContent = '';
+      document.getElementById('btnClearCoupon').style.display = 'none';
+      render();
+    };
+    document.getElementById('btnCheckout').onclick = () => {
+      if(!getCart().length) return;
+      location.href = loggedIn ? '/pay.html' : '/login.html?next=' + encodeURIComponent('/pay.html');
+    };
+
+    checkAuth().then(async () => {
+      render();
+      if(!getCart().length) return;
+      // restore a coupon chosen earlier, or auto-apply a referral link code
+      const saved = getSavedCoupon(); const ref = getRef();
+      const code = (saved && saved.code) || (ref && ref.code) || '';
+      if(code){
+        const refPid = (saved && saved.refProductId) || (ref && ref.code === code ? ref.productId : '') || '';
+        const ok = await applyCode(code, refPid, true);
+        if(!ok && ref && ref.code === code) localStorage.removeItem('mc_ref');
+      }
+    });
+  </script>
+<script src="/js/promo.js"></script>
+</body>
+</html>

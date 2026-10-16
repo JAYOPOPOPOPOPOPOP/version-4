@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Store</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    html[data-theme="dark"], html:not([data-theme]) {
+      --bg: #f5fffe; --card: #ffffff; --accent: #0891b2; --text: #0f172a; --muted: #334155;
+      --border: rgba(8,145,178,0.22); --nav-bg: rgba(255,255,255,0.95); --btn-text: #fff;
+    }
+    html[data-theme="dark"] {
+      --bg: #070b12; --card: #0f1621; --accent: #22d3ee; --text: #f8fafc; --muted: #cbd5e1;
+      --border: rgba(34,211,238,0.22); --nav-bg: rgba(7,11,18,0.95); --btn-text: #083344;
+    }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Outfit','Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    nav { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.5rem; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--nav-bg); backdrop-filter:blur(10px); z-index:10; gap:0.5rem; }
+    nav a { color:var(--text); text-decoration:none; font-weight:700; }
+    nav .back { color:var(--muted); font-weight:500; font-size:0.9rem; white-space:nowrap; }
+    nav .back:hover { color:var(--accent); }
+    .nav-right { display:flex; align-items:center; gap:0.65rem; }
+    .cart-btn { position:relative; background:rgba(6,182,212,0.12); border:1px solid rgba(6,182,212,0.35); color:var(--accent); border-radius:10px; padding:0.4rem 0.7rem; cursor:pointer; font-size:1.05rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem; }
+    .cart-btn .badge { position:absolute; top:-6px; right:-6px; background:#06b6d4; color:#083344; font-size:0.65rem; font-weight:800; min-width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; padding:0 4px; }
+    .wrap { max-width:960px; margin:0 auto; padding:2rem 1.25rem 4rem; }
+    h1 { color:var(--text); font-size:clamp(1.6rem,4vw,2.2rem); margin-bottom:1.25rem; }
+    .content { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.5rem; line-height:1.7; color:var(--text); white-space:pre-wrap; word-break:break-word; margin-bottom:1.5rem; }
+    .empty { color:var(--muted); text-align:center; padding:3rem 1rem; }
+    .muted { color:var(--muted); font-size:0.9rem; margin-bottom:1rem; }
+    .cats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+    }
+    @media (max-width:720px) {
+      .cats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width:420px) {
+      .cats-grid { grid-template-columns: 1fr; }
+    }
+    .cat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .cat-card:hover {
+      border-color: rgba(6,182,212,0.45);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.3);
+    }
+    .cat-card .cat-logo-wrap {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: rgba(0,0,0,0.35);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cat-card .cat-logo-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .cat-card .cat-logo-wrap .cat-icon {
+      font-size: 2.5rem;
+      opacity: 0.7;
+    }
+    .cat-card .cat-body {
+      padding: 0.85rem 0.9rem 1rem;
+    }
+    .cat-card h3 { color:var(--text);
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+    .cat-card p { color:var(--muted); 
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .cats-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+      font-weight: 600;
+    }
+  
+    
+
+  </style>
+
+
+<script>
+(function(){
+  document.documentElement.setAttribute('data-theme', 'dark');
+  function sync(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var knob = document.getElementById('themeKnob');
+    if (knob) knob.textContent = dark ? '🌙' : '☀️';
+  }
+  function bind(){
+    sync();
+    /* theme toggle removed */
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+  else bind();
+})();
+</script>
+
+
+<script src="/js/site-brand.js" defer></script>
+</head>
+<body>
+  <nav>
+    <a href="/">⛏️ <span id="siteName">Home</span></a>
+    <div id="nav-links" style="display:flex;gap:0.85rem;flex:1;justify-content:flex-end;flex-wrap:wrap;padding-right:0.5rem;margin-left:auto;"></div>
+    <div class="nav-right">
+      <a href="/cart.html" class="cart-btn" id="cartBtn" title="Cart">🛒 <span class="badge" id="cartBadge" style="display:none;">0</span></a>
+      <a href="/" class="back">← Home</a>
+    </div>
+  </nav>
+  <div class="wrap">
+    <p class="muted" id="status">Loading...</p>
+    <h1 id="title"></h1>
+    <div id="categoriesBox" style="display:none;">
+      <div class="cats-title">Categories</div>
+      <div class="cats-grid" id="catsGrid"></div>
+    </div>
+    <div class="content" id="content" style="display:none;"></div>
+    <div class="empty" id="empty" style="display:none;">Page not found. <a href="/" style="color:var(--accent);">Go home</a></div>
+  </div>
+  <script>
+    function escapeHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function updateCartBadge() {
+      try {
+        const cart = JSON.parse(localStorage.getItem('mc_cart') || '[]');
+        const n = cart.reduce((a, i) => a + (i.qty || 1), 0);
+        const b = document.getElementById('cartBadge');
+        if (!b) return;
+        if (n > 0) { b.style.display = 'flex'; b.textContent = n > 99 ? '99+' : n; }
+        else b.style.display = 'none';
+      } catch {}
+    }
+    async function load() {
+      updateCartBadge();
+      const params = new URLSearchParams(location.search);
+      const slug = params.get('slug') || '';
+      try {
+        const sRes = await fetch('/api/settings');
+        const sData = await sRes.json();
+        if (sData.success && sData.settings) {
+          document.getElementById('siteName').textContent = sData.settings.siteName || 'Home';
+          try {
+            const pr = await fetch('/api/pages');
+            const pd = await pr.json();
+            const nb = document.getElementById('nav-links');
+            if (nb && pd.success && pd.pages) {
+              nb.innerHTML = pd.pages.map(x => '<a href="/page.html?slug=' + encodeURIComponent(x.slug) + '" style="color:var(--muted);text-decoration:none;font-weight:600;font-size:0.9rem;">' + escapeHtml(x.title) + '</a>').join('');
+            }
+          } catch {}
+          document.title = (sData.settings.siteName || 'Store') + ' — Page';
+        }
+      } catch {}
+      if (!slug) {
+        document.getElementById('status').style.display = 'none';
+        document.getElementById('empty').style.display = 'block';
+        return;
+      }
+      try {
+        const res = await fetch('/api/pages/' + encodeURIComponent(slug));
+        const data = await res.json();
+        document.getElementById('status').style.display = 'none';
+        if (!data.success || !data.page) {
+          document.getElementById('empty').style.display = 'block';
+          return;
+        }
+        document.getElementById('title').textContent = data.page.title;
+        document.title = data.page.title;
+        const el = document.getElementById('content');
+        if (data.page.content && data.page.content.trim()) {
+          el.style.display = 'block';
+          el.textContent = data.page.content;
+        }
+        try {
+          const cr = await fetch('/api/categories?pageId=' + encodeURIComponent(data.page.id));
+          const cd = await cr.json();
+          if (cd.success && cd.categories && cd.categories.length) {
+            const box = document.getElementById('categoriesBox');
+            const grid = document.getElementById('catsGrid');
+            box.style.display = 'block';
+            grid.innerHTML = cd.categories.map(c => {
+              const img = c.logo
+                ? '<div class="cat-logo-wrap"><img src="' + escapeHtml(c.logo) + '" alt="' + escapeHtml(c.name) + '" /></div>'
+                : '<div class="cat-logo-wrap"><div class="cat-icon">📦</div></div>';
+              const desc = c.description
+                ? '<p>' + escapeHtml(c.description) + '</p>'
+                : '';
+              return '<a class="cat-card" href="/category.html?id=' + encodeURIComponent(c.id) + '">' +
+                img + '<div class="cat-body"><h3>' + escapeHtml(c.name) + '</h3>' + desc + '</div></a>';
+            }).join('');
+          }
+        } catch {}
+      } catch {
+        document.getElementById('status').style.display = 'none';
+        document.getElementById('empty').style.display = 'block';
+      }
+    }
+    load();
+  </script>
+<script src="/js/promo.js"></script>
+</body>
+</html>

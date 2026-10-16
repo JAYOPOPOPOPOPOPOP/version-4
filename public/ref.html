@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Special Offer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root { --bg:#070b12; --card:#0f1621; --accent:#22d3ee; --text:#f8fafc; --muted:#cbd5e1; --border:rgba(34,211,238,0.22); --nav-bg:rgba(7,11,18,0.95); }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Outfit','Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    nav { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.5rem; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--nav-bg); backdrop-filter:blur(10px); z-index:10; }
+    nav a { color:var(--text); text-decoration:none; font-weight:700; }
+    .cart-btn { position:relative; background:rgba(6,182,212,0.12); border:1px solid rgba(6,182,212,0.35); color:var(--accent); border-radius:10px; padding:0.4rem 0.7rem; font-size:1.05rem; }
+    .cart-btn .badge { position:absolute; top:-6px; right:-6px; background:#06b6d4; color:#083344; font-size:0.65rem; font-weight:800; min-width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; padding:0 4px; }
+    .wrap { max-width:960px; margin:0 auto; padding:2rem 1.25rem 4rem; }
+    .banner { background:linear-gradient(135deg,rgba(34,211,238,0.16),rgba(8,145,178,0.08)); border:1px solid var(--border); border-radius:16px; padding:1.25rem 1.4rem; margin-bottom:1.5rem; }
+    .banner h1 { font-size:clamp(1.3rem,3.5vw,1.8rem); margin-bottom:0.35rem; }
+    .banner p { color:var(--muted); line-height:1.5; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:1rem; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; display:flex; flex-direction:column; position:relative; }
+    .card.sel { border-color:#22d3ee; box-shadow:0 0 0 1px #22d3ee; }
+    .card img { width:100%; height:150px; object-fit:cover; background:rgba(0,0,0,0.3); }
+    .card .noimg { height:150px; display:flex; align-items:center; justify-content:center; font-size:2.2rem; background:rgba(0,0,0,0.25); }
+    .card .body { padding:0.9rem 1rem 1rem; display:flex; flex-direction:column; gap:0.45rem; flex:1; }
+    .card h3 { font-size:1.05rem; }
+    .card .sd { color:var(--muted); font-size:0.85rem; line-height:1.4; flex:1; }
+    .off { position:absolute; top:10px; left:10px; background:#16a34a; color:#fff; font-weight:800; font-size:0.78rem; padding:0.25rem 0.55rem; border-radius:8px; }
+    .prices { display:flex; align-items:baseline; gap:0.5rem; }
+    .prices s { color:var(--muted); font-size:0.9rem; }
+    .prices b { color:var(--accent); font-size:1.3rem; }
+    .btn { background:linear-gradient(135deg,#06b6d4,#0891b2); color:#083344; font-weight:700; border:none; border-radius:10px; padding:0.65rem 1rem; cursor:pointer; font-size:0.92rem; text-decoration:none; display:inline-block; text-align:center; font-family:inherit; }
+    .btn:hover { filter:brightness(1.08); }
+    .btn-outline { background:transparent; border:1px solid rgba(6,182,212,0.45); color:var(--accent); }
+    .note { color:var(--muted); font-size:0.85rem; margin:1rem 0 0; }
+    .err { background:rgba(248,113,113,0.12); border:1px solid rgba(248,113,113,0.4); color:#fca5a5; border-radius:12px; padding:1rem 1.2rem; margin-bottom:1.2rem; }
+    .toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#052e16; color:#86efac; border:1px solid #16a34a; padding:0.7rem 1.1rem; border-radius:10px; display:none; z-index:50; }
+  </style>
+  <script src="/js/site-brand.js" defer></script>
+</head>
+<body>
+  <nav>
+    <a href="/">⛏️ Store</a>
+    <a href="/cart.html" class="cart-btn">🛒 <span class="badge" id="cartBadge" style="display:none;">0</span></a>
+  </nav>
+  <div class="wrap">
+    <p id="status" style="color:var(--muted);">Loading offer...</p>
+    <div id="out"></div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script>
+    function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+    function getCart(){try{return JSON.parse(localStorage.getItem('mc_cart')||'[]');}catch{return[];}}
+    function setCart(c){localStorage.setItem('mc_cart',JSON.stringify(c));badge();}
+    function getRef(){try{return JSON.parse(localStorage.getItem('mc_ref')||'null');}catch{return null;}}
+    function badge(){const n=getCart().reduce((a,i)=>a+(i.qty||1),0);const b=document.getElementById('cartBadge');if(n>0){b.style.display='flex';b.textContent=n>99?'99+':n;}else b.style.display='none';}
+    const code=(new URLSearchParams(location.search).get('code')||new URLSearchParams(location.search).get('ref')||'').trim().toUpperCase();
+    let R=null, loggedIn=false;
+    const offLabel=r=>r.type==='percent'?(r.value+'% OFF'):('₹'+r.value+' OFF');
+
+    function toast(t){const e=document.getElementById('toast');e.textContent=t;e.style.display='block';clearTimeout(toast._t);toast._t=setTimeout(()=>e.style.display='none',2200);}
+
+    function render(){
+      const out=document.getElementById('out'); const ref=getRef();
+      const sel=(ref&&ref.code===R.code)?ref.productId:null;
+      const title=R.page?R.page.title:'';
+      let h='<div class="banner"><h1>🎁 '+esc(R.name||'Special referral offer')+'</h1><p><b>'+offLabel(R)+'</b> on <b>any ONE product</b> from '+(title?('<b>'+esc(title)+'</b>'):'this page')+'. Pick the product you want below — the discount is applied automatically at checkout. One use per account.'+(R.page?' <a href="/page.html?slug='+encodeURIComponent(R.page.slug)+'" style="color:var(--accent);">View full page →</a>':'')+'</p></div>';
+      if(!R.valid) h+='<div class="err">'+esc(R.reason||'This referral link cannot be used')+'</div>';
+      if(!R.products.length) h+='<p style="color:var(--muted);">No products available right now.</p>';
+      h+='<div class="grid">'+R.products.map(p=>{
+        const isSel=sel===p.id;
+        return '<div class="card'+(isSel?' sel':'')+'"><span class="off">'+offLabel(R)+'</span>'+
+          (p.image?'<img src="'+esc(p.image)+'" alt="">':'<div class="noimg">📦</div>')+
+          '<div class="body"><h3>'+esc(p.name)+'</h3><div class="sd">'+esc(p.shortDescription).slice(0,110)+'</div>'+
+          '<div class="prices"><s>₹'+Number(p.price).toFixed(2)+'</s><b>₹'+Number(p.discountedPrice).toFixed(2)+'</b></div>'+
+          (R.valid?('<button type="button" class="btn" data-add="'+esc(p.id)+'">'+(isSel?'✓ Selected — Add again':'Add to Cart')+'</button>'):'')+
+          '<a class="btn btn-outline" href="/product.html?id='+encodeURIComponent(p.id)+'">Details</a></div></div>';
+      }).join('')+'</div>';
+      if(sel) h+='<p class="note">✓ Your discount will apply to the selected product. <a class="btn" href="/cart.html" style="margin-left:0.5rem;">Go to Checkout</a></p>';
+      out.innerHTML=h;
+      out.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>addToCart(b.dataset.add));
+    }
+
+    function addToCart(id){
+      if(!loggedIn){location.href='/login.html?next='+encodeURIComponent(location.pathname+location.search);return;}
+      const p=R.products.find(x=>x.id===id); if(!p) return;
+      const cart=getCart(); const ex=cart.find(i=>i.productId===p.id);
+      if(ex) ex.qty=(ex.qty||1)+1; else cart.push({productId:p.id,name:p.name,price:p.price,image:p.image||'',qty:1});
+      setCart(cart);
+      localStorage.setItem('mc_ref',JSON.stringify({code:R.code,productId:p.id}));
+      toast('✓ Added to cart — '+offLabel(R)+' will be applied at checkout');
+      render();
+    }
+
+    (async function(){
+      badge();
+      const st=document.getElementById('status');
+      if(!code){st.textContent='Invalid referral link';return;}
+      try{ const m=await (await fetch('/api/me',{credentials:'include'})).json(); loggedIn=!!(m.success&&m.user); }catch{}
+      try{
+        const res=await fetch('/api/referral/'+encodeURIComponent(code),{credentials:'include'});
+        const d=await res.json();
+        if(!d.success){st.textContent=d.message||'Invalid referral link';return;}
+        R=d.referral; st.style.display='none';
+        // Product link: go straight to that product page (shows the offer there)
+        if(R.target==='product'&&R.products.length===1&&R.valid){
+          location.replace('/product.html?id='+encodeURIComponent(R.products[0].id)+'&ref='+encodeURIComponent(R.code)); return;
+        }
+        document.title=(R.name||'Special offer');
+        if(R.target==='product'){
+          document.getElementById('out').innerHTML='<div class="err">'+esc(R.reason||'This offer is not available')+'</div>'+(R.products[0]?'<a class="btn" href="/product.html?id='+encodeURIComponent(R.products[0].id)+'">View product</a>':'');
+          return;
+        }
+        render();
+      }catch{st.textContent='Failed to load offer';}
+    })();
+  </script>
+</body>
+</html>

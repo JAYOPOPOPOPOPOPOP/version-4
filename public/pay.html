@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/shop.css" />
+  <style>
+    .wrap { padding-top: 1rem; padding-bottom: 1.5rem; }
+    h1 { margin-bottom: 0.15rem; }
+    .sub { margin-bottom: 0.75rem; }
+    .steps { margin-bottom: 0.9rem; }
+    .panel h2 { margin-bottom: 0.6rem; }
+    .hint { margin-top: -0.3rem; margin-bottom: 0.6rem; }
+    .msg { margin-top: 0.6rem; padding: 0.65rem 0.85rem; }
+  </style>
+  <script src="/js/site-brand.js" defer></script>
+</head>
+<body>
+  <nav>
+    <a href="/">⛏️ Store</a>
+    <div class="links">
+      <a href="/my-orders.html">My Orders</a>
+      <a href="/checkout.html">← Back to review</a>
+    </div>
+  </nav>
+
+  <div class="wrap wide">
+    <div id="payView">
+      <h1>💳 Payment</h1>
+      <p class="sub">Complete your payment to place the order</p>
+
+      <div class="steps">
+        <div class="step done">1. Cart</div>
+        <div class="step done">2. Review</div>
+        <div class="step active" id="step3">3. Payment</div>
+        <div class="step" id="step4">4. Done</div>
+      </div>
+
+      <div class="pay-grid" id="payGrid">
+        <div class="panel" id="pSummary">
+          <h2>Order summary</h2>
+          <div class="mini-items" id="miniItems"></div>
+          <div id="sumRows"></div>
+        </div>
+        <div class="panel" id="pScan"><p style="color:var(--muted);font-size:0.9rem;">Loading payment details...</p></div>
+        <div class="panel" id="pConfirm" style="display:none;"></div>
+      </div>
+    </div>
+
+    <div id="successView" class="success-box">
+      <div class="icon">✅</div>
+      <h2>Order Submitted!</h2>
+      <p>Your payment is pending admin approval. Product will be delivered after approval.</p>
+      <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
+        <a href="/my-orders.html" class="btn btn-link">View My Orders</a>
+        <a href="/" class="btn btn-outline btn-link">Back to Store</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function getCart(){ try{ return JSON.parse(localStorage.getItem('mc_cart')||'[]'); }catch{ return []; } }
+    function getSavedCoupon(){ try{ return JSON.parse(localStorage.getItem('mc_coupon')||'null'); }catch{ return null; } }
+
+    let appliedCoupon = null;
+    let payMode = 'manual', gatewayProvider = 'razorpay', upiId = '', upiQr = '';
+    let grandTotal = 0;
+
+    function summaryRender(){
+      const cart = getCart();
+      let subtotal = 0, qtyTotal = 0;
+      document.getElementById('miniItems').innerHTML = cart.map(it => {
+        const q = it.qty || 1; subtotal += (it.price||0) * q; qtyTotal += q;
+        return '<div class="mini-item"><span>' + escapeHtml(it.name) + ' × ' + q + '</span><span>₹' + ((it.price||0)*q).toFixed(2) + '</span></div>';
+      }).join('');
+      const discount = appliedCoupon ? (appliedCoupon.discount || 0) : 0;
+      grandTotal = Math.max(0, subtotal - discount);
+      document.getElementById('sumRows').innerHTML =
+        '<div class="summary-row"><span>Products / quantity</span><span>' + cart.length + ' / ' + qtyTotal + '</span></div>' +
+        '<div class="summary-row"><span>Subtotal</span><span>₹' + subtotal.toFixed(2) + '</span></div>' +
+        (discount > 0 ? '<div class="summary-row"><span>Discount (' + escapeHtml(appliedCoupon.code) + ')</span><span class="disc">−₹' + discount.toFixed(2) + '</span></div>' : '') +
+        '<div class="summary-row total"><span>Total</span><span>₹' + grandTotal.toFixed(2) + '</span></div>';
+    }
+
+    function buildPanels(){
+      const scan = document.getElementById('pScan');
+      const conf = document.getElementById('pConfirm');
+      const grid = document.getElementById('payGrid');
+      const amount = '<div class="pay-amount">₹' + grandTotal.toFixed(2) + '</div>';
+      if(payMode === 'gateway'){
+        grid.classList.add('two');
+        conf.style.display = 'none';
+        scan.innerHTML =
+          '<h2>Online payment</h2><div class="qr-box">' + amount +
+          '<p style="font-weight:600;margin:0.4rem 0;">' + escapeHtml(gatewayProvider.toUpperCase()) + '</p>' +
+          '<p style="color:var(--muted);font-size:0.85rem;margin-bottom:0.9rem;">Secure checkout will open. No screenshot needed.</p>' +
+          '<button type="button" class="btn btn-full" id="btnCheckout">Pay Now</button>' +
+          '<div id="chkLoading" style="display:none;margin-top:0.6rem;color:var(--muted);"><span class="spin"></span> Please wait...</div>' +
+          '<div class="msg" id="msg" style="width:100%;"></div></div>';
+      } else {
+        grid.classList.remove('two');
+        conf.style.display = 'flex';
+        scan.innerHTML = '<h2>Scan &amp; Pay</h2><div class="qr-box">' + amount +
+          ((upiId || upiQr)
+            ? ((upiId ? '<div class="upi-id">UPI: ' + escapeHtml(upiId) + '</div>' : '') +
+               (upiQr ? '<img class="qr" src="' + escapeHtml(upiQr) + '" alt="UPI QR" />' : '') +
+               '<p style="color:var(--muted);font-size:0.85rem;">Pay the exact total, then upload proof.</p>')
+            : '<p style="color:#d97706;font-size:0.9rem;margin-top:0.5rem;">⚠️ Admin has not set UPI details yet.</p>') +
+          '</div>';
+        conf.innerHTML =
+          '<h2>Confirm payment</h2>' +
+          '<label>Your UPI ID (used for payment)</label>' +
+          '<input type="text" id="payerUpi" placeholder="yourname@upi" />' +
+          '<label>Payment screenshot / proof</label>' +
+          '<input type="file" id="proof" accept="image/*" />' +
+          '<p class="hint">Upload screenshot of the successful UPI payment</p>' +
+          '<button type="button" class="btn btn-full" id="btnCheckout" style="margin-top:auto;">Submit Order</button>' +
+          '<div id="chkLoading" style="display:none;margin-top:0.6rem;color:var(--muted);"><span class="spin"></span> Submitting...</div>' +
+          '<div class="msg" id="msg"></div>';
+      }
+      document.getElementById('btnCheckout').onclick = doPay;
+    }
+
+    function showSuccess(){
+      ['mc_cart','mc_ref','mc_coupon'].forEach(k => localStorage.removeItem(k));
+      document.getElementById('payView').style.display = 'none';
+      document.getElementById('successView').style.display = 'block';
+    }
+
+    async function doPay(){
+      const msg = document.getElementById('msg');
+      msg.className = 'msg';
+      const cart = getCart();
+      if(!cart.length) return;
+      const btn = document.getElementById('btnCheckout');
+      const loading = document.getElementById('chkLoading');
+      const stop = () => { btn.disabled = false; loading.style.display = 'none'; };
+      btn.disabled = true; loading.style.display = 'block';
+      const items = cart.map(i => ({ productId: i.productId, qty: i.qty||1 }));
+      const couponCode = appliedCoupon && appliedCoupon.code ? appliedCoupon.code : '';
+      const refProductId = appliedCoupon && appliedCoupon.refProductId ? appliedCoupon.refProductId : '';
+      try{
+        if(payMode === 'gateway'){
+          const res = await fetch('/api/pay/create-order', {
+            method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items, couponCode, refProductId })
+          });
+          const data = await res.json();
+          if(!data.success){ msg.className = 'msg err'; msg.textContent = data.message || 'Failed to start payment'; stop(); return; }
+          if(data.provider === 'razorpay'){
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => {
+              const rzp = new Razorpay({
+                key: data.keyId, amount: data.amount, currency: data.currency || 'INR',
+                order_id: data.orderId, name: 'Store', description: 'Order payment',
+                handler: async function(response){
+                  const v = await fetch('/api/pay/verify', {
+                    method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      paymentId: data.paymentId,
+                      razorpay_payment_id: response.razorpay_payment_id,
+                      razorpay_order_id: response.razorpay_order_id,
+                      razorpay_signature: response.razorpay_signature
+                    })
+                  });
+                  const vd = await v.json();
+                  if(vd.success) showSuccess();
+                  else { msg.className = 'msg err'; msg.textContent = vd.message || 'Verification failed'; }
+                }
+              });
+              rzp.open(); stop();
+            };
+            script.onerror = () => { msg.className = 'msg err'; msg.textContent = 'Could not load Razorpay'; stop(); };
+            document.body.appendChild(script);
+            return;
+          }
+          msg.className = 'msg ok';
+          msg.textContent = data.provider === 'stripe'
+            ? 'Stripe intent created. Full Stripe Elements UI can be enabled; paymentId: ' + data.paymentId
+            : (data.message || 'Order created. Complete payment with ' + data.provider);
+          stop(); return;
+        }
+
+        // Manual UPI / QR flow
+        const payerUpi = (document.getElementById('payerUpi').value || '').trim();
+        const proof = document.getElementById('proof');
+        if(!payerUpi){ msg.className = 'msg err'; msg.textContent = 'Enter your UPI ID used for payment.'; stop(); return; }
+        if(!proof.files || !proof.files[0]){ msg.className = 'msg err'; msg.textContent = 'Upload payment proof screenshot.'; stop(); return; }
+        const fd = new FormData();
+        fd.append('items', JSON.stringify(items));
+        fd.append('payerUpi', payerUpi);
+        fd.append('proof', proof.files[0]);
+        if(couponCode){ fd.append('couponCode', couponCode); fd.append('refProductId', refProductId); }
+        const res = await fetch('/api/checkout', { method: 'POST', credentials: 'include', body: fd });
+        const data = await res.json();
+        if(data.success) showSuccess();
+        else { msg.className = 'msg err'; msg.textContent = data.message || 'Checkout failed'; stop(); }
+      }catch(e){
+        msg.className = 'msg err'; msg.textContent = 'Network error'; stop();
+      }
+    }
+
+    async function init(){
+      // must be logged in and have items
+      let loggedIn = false;
+      try{ const d = await (await fetch('/api/me', { credentials: 'include' })).json(); loggedIn = !!(d.success && d.user); }catch{}
+      if(!loggedIn){ location.href = '/login.html?next=' + encodeURIComponent('/pay.html'); return; }
+      const cart = getCart();
+      if(!cart.length){ location.href = '/cart.html'; return; }
+
+      try{
+        const d = await (await fetch('/api/settings')).json();
+        if(d.success){
+          payMode = d.settings.payMode || 'manual';
+          gatewayProvider = d.settings.gatewayProvider || 'razorpay';
+          upiId = d.settings.upiId || '';
+          upiQr = d.settings.upiQr || '';
+        }
+      }catch{}
+
+      // re-check the coupon chosen on the review page
+      const saved = getSavedCoupon();
+      if(saved && saved.code){
+        try{
+          const res = await fetch('/api/validate-coupon', {
+            method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: saved.code, refProductId: saved.refProductId || '', items: cart.map(i => ({ productId: i.productId, qty: i.qty||1 })) })
+          });
+          const data = await res.json();
+          if(data.success) appliedCoupon = { code: data.code, discount: data.discount, refProductId: data.appliedProductId || saved.refProductId || '' };
+          else localStorage.removeItem('mc_coupon');
+        }catch{}
+      }
+      summaryRender();
+      buildPanels();
+    }
+    init();
+  </script>
+<script src="/js/promo.js"></script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Support — Store</title>
+  <style>
+    :root { --bg:#0b1220; --card:#111827; --text:#e5e7eb; --muted:#94a3b8; --accent:#06b6d4; --border:rgba(148,163,184,0.2); --staff:#0e7490; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: var(--bg); color: var(--text); height:100vh; overflow:hidden; display:flex; flex-direction:column; }
+    nav { display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1.1rem; border-bottom:1px solid var(--border); background:rgba(15,23,42,0.95); flex-shrink:0; }
+    nav a { color: var(--accent); text-decoration:none; font-weight:700; font-size:0.95rem; }
+    .app { flex:1; display:flex; min-height:0; }
+    /* Sidebar ticket list */
+    .sidebar { width:300px; border-right:1px solid var(--border); display:flex; flex-direction:column; background:#0f172a; flex-shrink:0; }
+    .sidebar-head { padding:0.85rem; border-bottom:1px solid var(--border); display:flex; gap:0.5rem; align-items:center; }
+    .sidebar-head h1 { font-size:1.05rem; margin:0; flex:1; }
+    .ticket-list { flex:1; overflow-y:auto; padding:0.4rem; }
+    .t-item { padding:0.7rem 0.75rem; border-radius:10px; cursor:pointer; margin-bottom:0.3rem; border:1px solid transparent; }
+    .t-item:hover { background:rgba(255,255,255,0.04); }
+    .t-item.active { background:rgba(6,182,212,0.12); border-color:rgba(6,182,212,0.35); }
+    .t-item strong { display:block; font-size:0.9rem; margin-bottom:0.15rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .t-item .meta { font-size:0.75rem; color:var(--muted); }
+    .badge { display:inline-block; padding:0.1rem 0.4rem; border-radius:999px; font-size:0.68rem; font-weight:700; text-transform:uppercase; }
+    .badge-open { background:rgba(34,197,94,0.15); color:#4ade80; }
+    .badge-answered { background:rgba(6,182,212,0.15); color:#22d3ee; }
+    .badge-closed { background:rgba(148,163,184,0.15); color:#94a3b8; }
+    /* Chat area */
+    .chat { flex:1; display:flex; flex-direction:column; min-width:0; background:var(--bg); }
+    .chat-head { padding:0.85rem 1rem; border-bottom:1px solid var(--border); background:rgba(15,23,42,0.9); }
+    .chat-head h2 { margin:0; font-size:1.05rem; }
+    .chat-head .meta { color:var(--muted); font-size:0.8rem; margin-top:0.2rem; }
+    .chat-msgs { flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:0.55rem; }
+    .bubble { max-width:78%; padding:0.65rem 0.85rem; border-radius:14px; font-size:0.92rem; line-height:1.45; position:relative; }
+    .bubble.user { align-self:flex-end; background:linear-gradient(135deg,#0891b2,#0e7490); color:#fff; border-bottom-right-radius:4px; }
+    .bubble.staff { align-self:flex-start; background:var(--card); border:1px solid var(--border); border-bottom-left-radius:4px; }
+    .bubble .who { font-size:0.72rem; opacity:0.8; margin-bottom:0.2rem; font-weight:600; }
+    .bubble .time { font-size:0.68rem; opacity:0.65; margin-top:0.3rem; text-align:right; }
+    .bubble img { max-width:200px; max-height:200px; border-radius:10px; margin-top:0.4rem; display:block; object-fit:cover; cursor:pointer; }
+    .bubble .txt { white-space:pre-wrap; word-break:break-word; }
+    .chat-input { border-top:1px solid var(--border); padding:0.75rem 1rem; background:rgba(15,23,42,0.95); flex-shrink:0; }
+    .chat-input.disabled { opacity:0.5; pointer-events:none; }
+    .input-row { display:flex; gap:0.5rem; align-items:flex-end; }
+    .input-row textarea { flex:1; background:#0f172a; border:1px solid var(--border); color:var(--text); border-radius:12px; padding:0.65rem 0.8rem; font:inherit; resize:none; min-height:44px; max-height:120px; }
+    .btn { background:linear-gradient(135deg,#06b6d4,#0891b2); color:#fff; border:none; border-radius:10px; padding:0.6rem 1rem; font-weight:700; cursor:pointer; font-size:0.88rem; white-space:nowrap; }
+    .btn-icon { background:rgba(255,255,255,0.06); border:1px solid var(--border); color:var(--text); border-radius:10px; width:44px; height:44px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1.15rem; flex-shrink:0; }
+    .btn-icon:hover { border-color:var(--accent); }
+    .btn-sm { padding:0.4rem 0.75rem; font-size:0.82rem; }
+    .empty-chat { flex:1; display:flex; align-items:center; justify-content:center; color:var(--muted); text-align:center; padding:2rem; flex-direction:column; gap:0.75rem; }
+    .attach-preview { display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:0.4rem; }
+    .attach-preview img { width:56px; height:56px; object-fit:cover; border-radius:8px; }
+    .login-need { flex:1; display:flex; align-items:center; justify-content:center; text-align:center; }
+    .login-need a { color:var(--accent); font-weight:700; }
+    /* New ticket overlay */
+    .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:50; align-items:center; justify-content:center; padding:1rem; }
+    .modal-bg.show { display:flex; }
+    .modal { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.25rem; width:100%; max-width:440px; max-height:90vh; overflow-y:auto; }
+    .modal h3 { margin:0 0 0.85rem; }
+    .form-group { margin-bottom:0.7rem; }
+    .form-group label { display:block; font-size:0.8rem; color:var(--muted); margin-bottom:0.25rem; }
+    .form-group input, .form-group textarea { width:100%; background:#0f172a; border:1px solid var(--border); color:var(--text); border-radius:10px; padding:0.6rem 0.75rem; font:inherit; }
+    .drop { border:2px dashed var(--border); border-radius:12px; padding:1rem; text-align:center; color:var(--muted); cursor:pointer; font-size:0.88rem; }
+    .drop.drag { border-color:var(--accent); color:var(--accent); }
+    .drop input { display:none; }
+    .modal-actions { display:flex; gap:0.5rem; margin-top:0.75rem; justify-content:flex-end; }
+    .btn-outline { background:transparent; border:1px solid var(--border); color:var(--text); }
+    @media (max-width:720px) {
+      .sidebar { width:100%; display:none; }
+      .sidebar.mobile-show { display:flex; position:absolute; inset:0; z-index:20; width:100%; }
+      .chat.mobile-hide { display:none; }
+    }
+  </style>
+<script src="/js/site-brand.js" defer></script>
+</head>
+<body>
+  <nav>
+    <a href="/">⛏️ Store</a>
+    <a href="/">← Back</a>
+  </nav>
+  <div class="app" id="app">
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <h1>🎫 Support</h1>
+        <button type="button" class="btn btn-sm" id="btnNew">+ New</button>
+      </div>
+      <div class="ticket-list" id="ticketList"><p class="meta" style="padding:0.75rem;color:var(--muted);">Loading...</p></div>
+    </div>
+    <div class="chat" id="chatPane">
+      <div class="empty-chat" id="emptyState">
+        <div style="font-size:2.5rem;">💬</div>
+        <div>Select a ticket or create a new one</div>
+        <button type="button" class="btn" id="btnNew2">+ New Ticket</button>
+      </div>
+      <div id="chatActive" style="display:none;flex:1;flex-direction:column;min-height:0;">
+        <div class="chat-head">
+          <h2 id="chatTitle">—</h2>
+          <div class="meta" id="chatMeta"></div>
+        </div>
+        <div class="chat-msgs" id="chatMsgs"></div>
+        <div class="chat-input" id="chatInput">
+          <div class="attach-preview" id="attachPrev"></div>
+          <div class="input-row">
+            <button type="button" class="btn-icon" id="btnAttach" title="Attach image">📎</button>
+            <input type="file" id="fileInput" accept="image/*,.heic,.heif,.avif,.bmp,.tiff,.tif,.ico,.svg" style="display:none;" />
+            <textarea id="replyBody" rows="1" placeholder="Type a message… emoji OK 😊"></textarea>
+            <button type="button" class="btn" id="btnSend">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-bg" id="newModal">
+    <div class="modal">
+      <h3>New Ticket</h3>
+      <div class="form-group"><label>Subject</label><input type="text" id="subject" maxlength="120" placeholder="Payment / delivery issue..." /></div>
+      <div class="form-group"><label>Message</label><textarea id="body" rows="4" placeholder="Describe your issue… 🔥"></textarea></div>
+      <div class="form-group">
+        <label>Image (optional · max 25MB · any type)</label>
+        <div class="drop" id="dropZone">📷 Drop or click to attach<input type="file" id="newFile" accept="image/*,.heic,.heif,.avif,.bmp,.tiff,.tif,.ico,.svg" /></div>
+        <div class="attach-preview" id="newPrev"></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" id="btnCancelNew">Cancel</button>
+        <button type="button" class="btn" id="btnSubmit">Create</button>
+      </div>
+      <p id="formMsg" style="color:var(--muted);font-size:0.82rem;margin-top:0.4rem;"></p>
+    </div>
+  </div>
+
+  <script src="/js/promo.js"></script>
+  <script>
+    function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    let currentId = null, replyFile = null, newFile = null;
+
+    async function ensureLogin() {
+      const r = await fetch('/api/me', { credentials: 'include' });
+      const d = await r.json();
+      if (!d.success || !d.user) {
+        document.getElementById('app').innerHTML = '<div class="login-need"><p>Please <a href="/login.html?next=/support.html">login</a> to use support.</p></div>';
+        return null;
+      }
+      return d.user;
+    }
+
+    function scrollChat() {
+      const el = document.getElementById('chatMsgs');
+      if (el) el.scrollTop = el.scrollHeight;
+    }
+
+    async function loadList(selectId) {
+      const box = document.getElementById('ticketList');
+      const res = await fetch('/api/tickets', { credentials: 'include' });
+      const d = await res.json();
+      const list = d.tickets || [];
+      if (!list.length) {
+        box.innerHTML = '<p style="padding:0.75rem;color:var(--muted);font-size:0.85rem;">No tickets yet</p>';
+        return;
+      }
+      box.innerHTML = list.map(t => `
+        <div class="t-item ${t.id===currentId?'active':''}" data-id="${t.id}">
+          <strong>${escapeHtml(t.subject)}</strong>
+          <div class="meta"><span class="badge badge-${t.status||'open'}">${escapeHtml(t.status||'open')}</span> · ${t.messageCount||0} msgs</div>
+        </div>`).join('');
+      box.querySelectorAll('.t-item').forEach(el => {
+        el.onclick = () => openThread(el.dataset.id);
+      });
+      if (selectId) openThread(selectId);
+    }
+
+    async function openThread(id) {
+      currentId = id;
+      document.querySelectorAll('.t-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
+      const res = await fetch('/api/tickets/' + id, { credentials: 'include' });
+      const d = await res.json();
+      if (!d.success) return;
+      const t = d.ticket;
+      document.getElementById('emptyState').style.display = 'none';
+      const active = document.getElementById('chatActive');
+      active.style.display = 'flex';
+      document.getElementById('chatTitle').textContent = t.subject || 'Ticket';
+      document.getElementById('chatMeta').textContent = (t.status || '') + ' · ' + (t.createdAt ? new Date(t.createdAt).toLocaleString() : '');
+      const closed = t.status === 'closed';
+      document.getElementById('chatInput').classList.toggle('disabled', closed);
+      document.getElementById('chatMsgs').innerHTML = (t.messages || []).map(m => {
+        const side = m.from === 'staff' ? 'staff' : 'user';
+        const imgs = (m.attachments||[]).map(a => `<a href="${escapeHtml(a.url)}" target="_blank"><img src="${escapeHtml(a.url)}" alt=""/></a>`).join('');
+        return `<div class="bubble ${side}">
+          <div class="who">${escapeHtml(m.userName || m.from)}${m.from==='staff'?' · Staff':''}</div>
+          <div class="txt">${escapeHtml(m.body)}</div>
+          ${imgs}
+          <div class="time">${m.createdAt ? new Date(m.createdAt).toLocaleString() : ''}</div>
+        </div>`;
+      }).join('');
+      scrollChat();
+      replyFile = null;
+      document.getElementById('attachPrev').innerHTML = '';
+      document.getElementById('replyBody').value = '';
+    }
+
+    document.getElementById('btnAttach').onclick = () => document.getElementById('fileInput').click();
+    document.getElementById('fileInput').onchange = () => {
+      const f = document.getElementById('fileInput').files[0];
+      if (!f) return;
+      if (f.size > 25*1024*1024) { alert('Max 25MB'); return; }
+      replyFile = f;
+      const url = URL.createObjectURL(f);
+      document.getElementById('attachPrev').innerHTML = `<img src="${url}" alt=""/><span style="font-size:0.75rem;color:var(--muted);align-self:center;">${escapeHtml(f.name)}</span>`;
+    };
+
+    document.getElementById('btnSend').onclick = async () => {
+      if (!currentId) return;
+      const body = (document.getElementById('replyBody').value || '').trim();
+      if (!body && !replyFile) return;
+      const fd = new FormData();
+      fd.append('body', body || '(image)');
+      if (replyFile) fd.append('image', replyFile);
+      const res = await fetch('/api/tickets/' + currentId + '/reply', { method: 'POST', credentials: 'include', body: fd });
+      const d = await res.json();
+      if (d.success) { await openThread(currentId); loadList(); }
+      else alert(d.message || 'Failed');
+    };
+
+    document.getElementById('replyBody').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('btnSend').click(); }
+    });
+
+    function openNew() {
+      newFile = null;
+      document.getElementById('subject').value = '';
+      document.getElementById('body').value = '';
+      document.getElementById('newPrev').innerHTML = '';
+      document.getElementById('formMsg').textContent = '';
+      document.getElementById('newModal').classList.add('show');
+    }
+    document.getElementById('btnNew').onclick = openNew;
+    document.getElementById('btnNew2').onclick = openNew;
+    document.getElementById('btnCancelNew').onclick = () => document.getElementById('newModal').classList.remove('show');
+
+    const drop = document.getElementById('dropZone');
+    const newFileInput = document.getElementById('newFile');
+    drop.onclick = () => newFileInput.click();
+    drop.ondragover = e => { e.preventDefault(); drop.classList.add('drag'); };
+    drop.ondragleave = () => drop.classList.remove('drag');
+    drop.ondrop = e => { e.preventDefault(); drop.classList.remove('drag'); if (e.dataTransfer.files[0]) setNewFile(e.dataTransfer.files[0]); };
+    newFileInput.onchange = () => { if (newFileInput.files[0]) setNewFile(newFileInput.files[0]); };
+    function setNewFile(f) {
+      if (f.size > 25*1024*1024) { alert('Max 25MB'); return; }
+      newFile = f;
+      const url = URL.createObjectURL(f);
+      document.getElementById('newPrev').innerHTML = `<img src="${url}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;"/>`;
+    }
+
+    document.getElementById('btnSubmit').onclick = async () => {
+      const subject = (document.getElementById('subject').value||'').trim();
+      const body = (document.getElementById('body').value||'').trim();
+      const msg = document.getElementById('formMsg');
+      if (!subject || !body) { msg.textContent = 'Subject and message required'; return; }
+      const fd = new FormData();
+      fd.append('subject', subject);
+      fd.append('body', body);
+      if (newFile) fd.append('image', newFile);
+      msg.textContent = 'Creating...';
+      const res = await fetch('/api/tickets', { method: 'POST', credentials: 'include', body: fd });
+      const d = await res.json();
+      if (d.success) {
+        document.getElementById('newModal').classList.remove('show');
+        await loadList(d.ticket.id);
+      } else msg.textContent = d.message || 'Failed';
+    };
+
+    (async () => {
+      const u = await ensureLogin();
+      if (u) loadList();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Category</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    html[data-theme="dark"], html:not([data-theme]) {
+      --bg: #f5fffe; --card: #ffffff; --accent: #0891b2; --text: #0f172a; --muted: #334155;
+      --border: rgba(8,145,178,0.22); --nav-bg: rgba(255,255,255,0.95); --btn-text: #fff;
+    }
+    html[data-theme="dark"] {
+      --bg: #070b12; --card: #0f1621; --accent: #22d3ee; --text: #f8fafc; --muted: #cbd5e1;
+      --border: rgba(34,211,238,0.22); --nav-bg: rgba(7,11,18,0.95); --btn-text: #083344;
+    }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Outfit','Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    nav { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.5rem; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--nav-bg); backdrop-filter:blur(10px); z-index:10; gap:0.5rem; }
+    nav a { color:var(--text); text-decoration:none; font-weight:700; }
+    .nav-right { display:flex; align-items:center; gap:0.65rem; }
+    .cart-btn { position:relative; background:rgba(6,182,212,0.12); border:1px solid rgba(6,182,212,0.35); color:var(--accent); border-radius:10px; padding:0.4rem 0.7rem; cursor:pointer; font-size:1.05rem; text-decoration:none; display:inline-flex; align-items:center; }
+    .cart-btn .badge { position:absolute; top:-6px; right:-6px; background:#06b6d4; color:#083344; font-size:0.65rem; font-weight:800; min-width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; padding:0 4px; }
+    .back { color:var(--muted); font-weight:500; font-size:0.9rem; }
+    .back:hover { color:var(--accent); }
+    .wrap { max-width:1000px; margin:0 auto; padding:2rem 1.25rem 4rem; }
+    h1 { color:var(--text); font-size:clamp(1.5rem,4vw,2rem); margin-bottom:0.5rem; }
+    .cat-desc { color:var(--muted); white-space:pre-wrap; margin-bottom:1.5rem; line-height:1.55; }
+    .products { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:1.1rem; }
+    .prod-card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; display:flex; flex-direction:column; }
+    .prod-card .img-wrap { width:100%; aspect-ratio:16/10; background:rgba(0,0,0,0.3); }
+    .prod-card .img-wrap img { width:100%; height:100%; object-fit:cover; display:block; }
+    .prod-card .body { padding:1rem; flex:1; display:flex; flex-direction:column; }
+    .prod-card h3 { color:var(--text); font-size:1.05rem; margin-bottom:0.4rem; }
+    .prod-card .short { color:var(--muted); font-size:0.88rem; white-space:pre-wrap; line-height:1.45; margin-bottom:0.75rem; flex:1; }
+    .prod-card .price { font-weight:800; color:var(--accent); font-size:1.15rem; margin-bottom:0.75rem; }
+    .prod-card .badge-pop { display:inline-block; background:rgba(251,191,36,0.2); color:#fbbf24; font-size:0.7rem; font-weight:700; padding:0.15rem 0.45rem; border-radius:6px; margin-bottom:0.5rem; }
+    .btn { display:inline-block; background:linear-gradient(135deg,#06b6d4,#0891b2); color:#083344; font-weight:700; border:none; border-radius:10px; padding:0.55rem 1rem; cursor:pointer; text-decoration:none; text-align:center; font-size:0.9rem; }
+    .btn:hover { filter:brightness(1.08); }
+    .empty { color:var(--muted); text-align:center; padding:3rem 1rem; }
+  
+    
+
+  </style>
+
+
+<script>
+(function(){
+  document.documentElement.setAttribute('data-theme', 'dark');
+  function sync(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var knob = document.getElementById('themeKnob');
+    if (knob) knob.textContent = dark ? '🌙' : '☀️';
+  }
+  function bind(){
+    sync();
+    /* theme toggle removed */
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+  else bind();
+})();
+</script>
+
+
+<script src="/js/site-brand.js" defer></script>
+</head>
+<body>
+  <nav>
+    <a href="/">⛏️ Store</a>
+    <div class="nav-right">
+      <a href="/cart.html" class="cart-btn">🛒 <span class="badge" id="cartBadge" style="display:none;">0</span></a>
+      <a href="javascript:history.back()" class="back">← Back</a>
+    </div>
+  </nav>
+  <div class="wrap">
+    <p id="status" style="color:var(--muted);">Loading...</p>
+    <h1 id="title"></h1>
+    <p class="cat-desc" id="desc"></p>
+    <div class="products" id="grid"></div>
+    <div class="empty" id="empty" style="display:none;">No products in this category yet.</div>
+  </div>
+  <script>
+    function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+    function updateCartBadge(){
+      try{
+        const cart=JSON.parse(localStorage.getItem('mc_cart')||'[]');
+        const n=cart.reduce((a,i)=>a+(i.qty||1),0);
+        const b=document.getElementById('cartBadge');
+        if(n>0){b.style.display='flex';b.textContent=n>99?'99+':n;}else b.style.display='none';
+      }catch{}
+    }
+    async function load(){
+      updateCartBadge();
+      const id=new URLSearchParams(location.search).get('id')||'';
+      if(!id){document.getElementById('status').textContent='Invalid category';return;}
+      try{
+        const cr=await fetch('/api/categories/'+encodeURIComponent(id));
+        const cd=await cr.json();
+        if(!cd.success||!cd.category){document.getElementById('status').textContent='Category not found';return;}
+        document.getElementById('status').style.display='none';
+        document.getElementById('title').textContent=cd.category.name;
+        document.title=cd.category.name;
+        document.getElementById('desc').textContent=cd.category.description||'';
+        const pr=await fetch('/api/products?categoryId='+encodeURIComponent(id));
+        const pd=await pr.json();
+        const grid=document.getElementById('grid');
+        if(!pd.success||!pd.products||!pd.products.length){
+          document.getElementById('empty').style.display='block';
+          return;
+        }
+        grid.innerHTML=pd.products.map(p=>{
+          const img=p.image?'<div class="img-wrap"><img src="'+escapeHtml(p.image)+'" alt=""/></div>':'<div class="img-wrap" style="display:flex;align-items:center;justify-content:center;font-size:2rem;">🎁</div>';
+          const pop=p.popular?'<div class="badge-pop">🔥 Popular</div>':'';
+          return '<div class="prod-card">'+img+'<div class="body">'+pop+
+            '<h3>'+escapeHtml(p.name)+'</h3>'+
+            '<div class="short">'+escapeHtml(p.shortDescription||'')+'</div>'+
+            '<div class="price">₹'+Number(p.price).toFixed(2)+'</div>'+
+            '<a class="btn" href="/product.html?id='+encodeURIComponent(p.id)+'">View Full Product</a>'+
+            '</div></div>';
+        }).join('');
+      }catch{
+        document.getElementById('status').textContent='Failed to load';
+      }
+    }
+    load();
+  </script>
+<script src="/js/promo.js"></script>
+</body>
+</html>

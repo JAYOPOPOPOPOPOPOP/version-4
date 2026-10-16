@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    html[data-theme="dark"], html:not([data-theme]) {
+      --bg: #f5fffe; --card: #ffffff; --accent: #0891b2; --text: #0f172a; --muted: #334155;
+      --border: rgba(8,145,178,0.22); --nav-bg: rgba(255,255,255,0.95); --btn-text: #fff;
+    }
+    html[data-theme="dark"] {
+      --bg: #070b12; --card: #0f1621; --accent: #22d3ee; --text: #f8fafc; --muted: #cbd5e1;
+      --border: rgba(34,211,238,0.22); --nav-bg: rgba(7,11,18,0.95); --btn-text: #083344;
+    }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Outfit','Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    nav { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.5rem; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--nav-bg); backdrop-filter:blur(10px); z-index:10; gap:0.5rem; }
+    nav a { color:var(--text); text-decoration:none; font-weight:700; }
+    .nav-right { display:flex; align-items:center; gap:0.65rem; }
+    .cart-btn { position:relative; background:rgba(6,182,212,0.12); border:1px solid rgba(6,182,212,0.35); color:var(--accent); border-radius:10px; padding:0.4rem 0.7rem; cursor:pointer; font-size:1.05rem; text-decoration:none; }
+    .cart-btn .badge { position:absolute; top:-6px; right:-6px; background:#06b6d4; color:#083344; font-size:0.65rem; font-weight:800; min-width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; padding:0 4px; }
+    .back { color:var(--muted); font-weight:500; font-size:0.9rem; }
+    .wrap { max-width:900px; margin:0 auto; padding:2rem 1.25rem 4rem; }
+    .hero-img { width:100%; max-height:420px; object-fit:cover; border-radius:16px; border:1px solid var(--border); background:rgba(0,0,0,0.3); margin-bottom:1.25rem; }
+    h1 { color:var(--text); font-size:clamp(1.5rem,4vw,2.1rem); margin-bottom:0.5rem; }
+    .meta { color:var(--muted); font-size:0.9rem; margin-bottom:0.75rem; }
+    .price { font-size:1.5rem; font-weight:800; color:var(--accent); margin-bottom:1rem; }
+    .badge-pop { display:inline-block; background:rgba(251,191,36,0.2); color:#fbbf24; font-size:0.75rem; font-weight:700; padding:0.2rem 0.5rem; border-radius:6px; margin-bottom:0.75rem; }
+    .desc { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:1.25rem; white-space:pre-wrap; line-height:1.65; margin-bottom:1.5rem; }
+    .actions { display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem; }
+    .btn { background:linear-gradient(135deg,#06b6d4,#0891b2); color:#083344; font-weight:700; border:none; border-radius:10px; padding:0.7rem 1.25rem; cursor:pointer; font-size:0.95rem; text-decoration:none; display:inline-block; }
+    .btn:hover { filter:brightness(1.08); }
+    .btn-outline { background:transparent; border:1px solid rgba(6,182,212,0.45); color:var(--accent); }
+    .cart-modal { display:none; position:fixed; inset:0; background:rgba(2,6,23,0.65); z-index:100; align-items:center; justify-content:center; padding:1rem; }
+    .cart-modal.show { display:flex; }
+    .cart-modal-box { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:1.75rem 1.5rem 1.5rem; max-width:380px; width:100%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.45); }
+    .cart-modal-box .ok { width:54px; height:54px; border-radius:50%; background:rgba(16,185,129,0.18); color:#10b981; font-size:1.7rem; font-weight:800; display:flex; align-items:center; justify-content:center; margin:0 auto 0.75rem; }
+    .cart-modal-box h3 { font-size:1.2rem; margin-bottom:0.3rem; }
+    .cart-modal-box p { color:var(--muted); font-size:0.92rem; margin-bottom:1.25rem; }
+    .cart-modal-box .cm-actions { display:flex; gap:0.75rem; }
+    .cart-modal-box .cm-actions .btn { flex:1; text-align:center; }
+    .msg { margin-top:0.75rem; font-size:0.9rem; color:var(--accent); }
+  
+    
+
+  </style>
+
+
+<script>
+(function(){
+  document.documentElement.setAttribute('data-theme', 'dark');
+  function sync(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var knob = document.getElementById('themeKnob');
+    if (knob) knob.textContent = dark ? '🌙' : '☀️';
+  }
+  function bind(){
+    sync();
+    /* theme toggle removed */
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+  else bind();
+})();
+</script>
+
+
+<script src="/js/site-brand.js" defer></script>
+</head>
+<body>
+  <nav>
+    <a href="/">⛏️ Store</a>
+    <div class="nav-right">
+      <a href="/cart.html" class="cart-btn">🛒 <span class="badge" id="cartBadge" style="display:none;">0</span></a>
+      <a href="javascript:history.back()" class="back">← Back</a>
+    </div>
+  </nav>
+  <div class="wrap">
+    <p id="status" style="color:var(--muted);">Loading...</p>
+    <div id="main" style="display:none;">
+      <img class="hero-img" id="img" alt="" style="display:none;" />
+      <div id="pop" class="badge-pop" style="display:none;">🔥 Popular</div>
+      <h1 id="name"></h1>
+      <div class="meta" id="cat"></div>
+      <div class="price" id="price"></div>
+      <div id="refOffer" style="display:none;margin:-0.25rem 0 1rem;padding:0.7rem 1rem;border-radius:10px;font-size:0.9rem;"></div>
+      <div class="desc" id="desc"></div>
+      <div class="actions">
+        <button type="button" class="btn" id="btnAdd">Add to Cart</button>
+      </div>
+    </div>
+  </div>
+  <div class="cart-modal" id="cartModal">
+    <div class="cart-modal-box">
+      <div class="ok">✓</div>
+      <h3>Added to cart</h3>
+      <p id="cartModalInfo"></p>
+      <div class="cm-actions">
+        <a class="btn btn-outline" href="/" id="btnContinue">Continue</a>
+        <a class="btn" href="/cart.html">Checkout</a>
+      </div>
+    </div>
+  </div>
+  <script>
+    function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+    function getCart(){try{return JSON.parse(localStorage.getItem('mc_cart')||'[]');}catch{return[];}}
+    function setCart(c){localStorage.setItem('mc_cart',JSON.stringify(c));updateCartBadge();}
+    function updateCartBadge(){
+      const cart=getCart();
+      const n=cart.reduce((a,i)=>a+(i.qty||1),0);
+      const b=document.getElementById('cartBadge');
+      if(n>0){b.style.display='flex';b.textContent=n>99?'99+':n;}else b.style.display='none';
+    }
+    let product=null;
+    let loggedIn=false;
+    async function checkAuth(){
+      try{
+        const r=await fetch('/api/me',{credentials:'include'});
+        const d=await r.json();
+        loggedIn=!!(d.success&&d.user);
+      }catch{loggedIn=false;}
+      const btn=document.getElementById('btnAdd');
+      if(btn){
+        if(!loggedIn){
+          btn.textContent='Login to Buy';
+          btn.title='Only registered members can buy';
+        }else{
+          btn.textContent='Add to Cart';
+          btn.title='';
+        }
+      }
+    }
+    let offer=null;
+    async function loadOffer(){
+      const code=(new URLSearchParams(location.search).get('ref')||'').trim().toUpperCase();
+      if(!code||!product) return;
+      const box=document.getElementById('refOffer');
+      try{
+        const d=await (await fetch('/api/referral/'+encodeURIComponent(code),{credentials:'include'})).json();
+        if(!d.success) return;
+        const r=d.referral; const p=r.products.find(x=>x.id===product.id);
+        if(!p) return;
+        box.style.display='block';
+        if(!r.valid){
+          box.style.background='rgba(248,113,113,0.12)'; box.style.color='#fca5a5';
+          box.textContent='🎁 Referral offer unavailable: '+(r.reason||'not valid');
+          return;
+        }
+        offer={code:r.code};
+        const lbl=r.type==='percent'?(r.value+'% OFF'):('₹'+r.value+' OFF');
+        document.getElementById('price').innerHTML='<s style="color:var(--muted);font-size:1.05rem;font-weight:500;">₹'+Number(p.price).toFixed(2)+'</s> ₹'+Number(p.discountedPrice).toFixed(2)+' <span style="background:#16a34a;color:#fff;font-size:0.75rem;font-weight:800;padding:0.2rem 0.5rem;border-radius:7px;vertical-align:middle;">'+lbl+'</span>';
+        box.style.background='rgba(34,211,238,0.12)'; box.style.color='var(--accent)';
+        box.textContent='🎁 Referral offer: '+lbl+' — applied automatically at checkout (one use per account).';
+      }catch{}
+    }
+    async function load(){
+      await checkAuth();
+      updateCartBadge();
+      const id=new URLSearchParams(location.search).get('id')||'';
+      if(!id){document.getElementById('status').textContent='Invalid product';return;}
+      try{
+        const res=await fetch('/api/products/'+encodeURIComponent(id));
+        const data=await res.json();
+        if(!data.success||!data.product){document.getElementById('status').textContent='Product not found';return;}
+        product=data.product;
+        document.getElementById('status').style.display='none';
+        document.getElementById('main').style.display='block';
+        document.title=product.name;
+        document.getElementById('name').textContent=product.name;
+        document.getElementById('price').textContent='₹'+Number(product.price).toFixed(2);
+        document.getElementById('desc').textContent=product.fullDescription||product.shortDescription||'';
+        document.getElementById('cat').textContent=product.categoryName?('Category: '+product.categoryName):'';
+        if(product.popular) document.getElementById('pop').style.display='inline-block';
+        const hero = product.descriptionImage || product.image;
+        if(hero){
+          const img=document.getElementById('img');
+          img.src=hero;
+          img.style.display='block';
+        }
+        await loadOffer();
+        document.getElementById('btnContinue').href=product.categoryId?('/category.html?id='+encodeURIComponent(product.categoryId)):'/';
+      }catch{
+        document.getElementById('status').textContent='Failed to load';
+      }
+    }
+    document.getElementById('btnAdd').onclick=()=>{
+      if(!product) return;
+      if(!loggedIn){
+        const ret=encodeURIComponent(location.pathname+location.search);
+        location.href='/login.html?next='+ret;
+        return;
+      }
+      const cart=getCart();
+      const existing=cart.find(i=>i.productId===product.id);
+      if(existing) existing.qty=(existing.qty||1)+1;
+      else cart.push({productId:product.id,name:product.name,price:product.price,image:product.image||product.descriptionImage||'',qty:1});
+      setCart(cart);
+      if(offer) localStorage.setItem('mc_ref',JSON.stringify({code:offer.code,productId:product.id}));
+      const qty=(cart.find(i=>i.productId===product.id)||{}).qty||1;
+      document.getElementById('cartModalInfo').textContent=product.name+' (×'+qty+') — '+cart.reduce((a,i)=>a+(i.qty||1),0)+' item(s) in your cart';
+      document.getElementById('cartModal').classList.add('show');
+    };
+    document.getElementById('cartModal').addEventListener('click',function(e){ if(e.target===this) this.classList.remove('show'); });
+    load();
+  </script>
+<script src="/js/promo.js"></script>
+</body>
+</html>
